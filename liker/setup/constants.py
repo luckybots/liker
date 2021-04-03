@@ -10,6 +10,14 @@ RESTART_SECONDS = 10
 
 MESSAGES_LOG_PREFIX = 'messages'
 
+BUTTON_HANDLER = 'lik'
+
+REACTION_HASH_BYTES = 4
+
+ABUSE_PERIOD_SECONDS = 600
+ABUSE_THRESHOLD = 100
+ABUSE_JANITOR_SECONDS = 1 * 60 * 60
+
 
 def data_dir():
     return APP_DIR/'data'
@@ -42,3 +50,10 @@ def messages_log_dir():
 def chat_ids_state_path():
     return state_dir()/'chat_ids.json'
 
+
+def enabled_channels_state_path():
+    return state_dir()/'enabled_channels.json'
+
+
+def space_dir():
+    return state_dir()/'space'
