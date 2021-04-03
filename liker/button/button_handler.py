@@ -24,13 +24,14 @@ class ButtonHandler(TelegramInboxHandler):
     abuse_detector = inject.attr(AbuseDetector)
 
     def channel_post(self, channel_post: types.Message) -> bool:
-        channel_id = channel_post.chat.id
-        if not self.enabled_channels.is_enabled(channel_id):
+        channel_id: int = channel_post.chat.id
+        str_channel_id = str(channel_id)
+        if not self.enabled_channels.is_enabled(str_channel_id):
             return False
 
         message_id = channel_post.id
 
-        channel_dict = self.enabled_channels.get_channel_dict(channel_id)
+        channel_dict = self.enabled_channels.get_channel_dict(str_channel_id)
         enabled_reactions = channel_dict['reactions']
         reply_markup = markup_utils.build_reply_markup(enabled_reactions=enabled_reactions,
                                                        state_dict=None,
@@ -51,7 +52,7 @@ class ButtonHandler(TelegramInboxHandler):
             return False
 
         chat_id = callback_query.message.chat.id
-        if not self.enabled_channels.is_enabled(chat_id):
+        if not self.enabled_channels.is_enabled(str(chat_id)):
             return False
 
         sender_id = callback_query.from_user.id
@@ -60,8 +61,8 @@ class ButtonHandler(TelegramInboxHandler):
             logger.warning(f'Abuse detected: {self.hasher.trimmed(sender_id)}')
             return True
 
-        channel_id = chat_id
-        message_id = callback_query.message.id
+        channel_id: int = chat_id
+        message_id: int = callback_query.message.id
         reply_markup_telegram = callback_query.message.reply_markup
         if reply_markup_telegram is None:
             logger.error(f'Received a callback without reply markup. Ignoring it. Channel {channel_id}, '
@@ -75,7 +76,7 @@ class ButtonHandler(TelegramInboxHandler):
 
         reaction_id = f'{chat_id}_{message_id}_{sender_id}_{reaction}'
         reaction_hash = self.hasher.trimmed(reaction_id, hash_bytes=constants.REACTION_HASH_BYTES)
-        channel_state = self.space_state.ensure_channel_state(channel_id)
+        channel_state = self.space_state.ensure_channel_state(str(channel_id))
         if channel_state.has_reaction_hash(reaction_hash):
             channel_state.change_reaction_counter(reply_markup=reply_markup_new, reaction=reaction, delta=-1)
             channel_state.remove_reaction_hash(reaction_hash)

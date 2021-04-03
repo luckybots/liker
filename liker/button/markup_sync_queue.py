@@ -27,37 +27,24 @@ class MarkupSyncQueue:
     def __init__(self):
         self.channel_update_times = {}
 
-    def add(self, channel_id, message_id, reply_markup: InlineKeyboardMarkup, to_top=False):
-        channel_state = self.space_state.ensure_channel_state(channel_id)
-        ch_queue = channel_state.ensure_markup_queue()
-        reply_markup_json = reply_markup.to_json()
+    def add(self, channel_id: int, message_id: int, reply_markup: InlineKeyboardMarkup, to_top=False):
+        channel_state = self.space_state.ensure_channel_state(str(channel_id))
+        str_reply_markup = reply_markup.to_json()
+        channel_state.add_markup_to_queue(str_message_id=str(message_id),
+                                          str_markup_queue=str_reply_markup,
+                                          to_top=to_top)
 
-        str_message_id = str(message_id)
-        if to_top:
-            if str_message_id in ch_queue:
-                del ch_queue[str_message_id]
-            ch_queue = dict([(str_message_id, reply_markup_json)] + list(ch_queue.items()))
-        else:
-            ch_queue[str_message_id] = reply_markup_json
-        channel_state.update_markup_queue(ch_queue)
+    def try_remove(self, channel_id: int, message_id: int):
+        channel_state = self.space_state.ensure_channel_state(str(channel_id))
+        channel_state.try_remove_markup_from_queue(str(message_id))
 
-    def try_remove(self, channel_id, message_id):
-        channel_state = self.space_state.ensure_channel_state(channel_id)
-        ch_queue = channel_state.ensure_markup_queue()
-        str_message_id = str(message_id)
-        if str_message_id in ch_queue:
-            del ch_queue[str_message_id]
-            channel_state.update_markup_queue(ch_queue)
-
-    def try_get_markup(self, channel_id, message_id) -> Optional[InlineKeyboardMarkup]:
-        str_message_id = str(message_id)
-        channel_state = self.space_state.ensure_channel_state(channel_id)
-        ch_queue = channel_state.ensure_markup_queue()
-        reply_markup_json = ch_queue.get(str_message_id, None)
-        reply_markup = None if (reply_markup_json is None) else InlineKeyboardMarkup.de_json(reply_markup_json)
+    def try_get_markup(self, channel_id: int, message_id: int) -> Optional[InlineKeyboardMarkup]:
+        channel_state = self.space_state.ensure_channel_state(str(channel_id))
+        str_reply_markup = channel_state.try_get_markup(str(message_id))
+        reply_markup = None if (str_reply_markup is None) else InlineKeyboardMarkup.de_json(str_reply_markup)
         return reply_markup
 
-    def _ensure_channel_update_times(self, channel_id) -> list:
+    def _ensure_channel_update_times(self, channel_id: int) -> list:
         if channel_id not in self.channel_update_times:
             self.channel_update_times[channel_id] = []
         return self.channel_update_times[channel_id]
@@ -82,7 +69,7 @@ class MarkupSyncQueue:
                 # If there was no updates in the channel last minute -- consume half a minute
                 dt_to_consume = 30 if (not upd_times) else (cur_time - max(upd_times))
 
-                ch_state = self.space_state.ensure_channel_state(ch_id)
+                ch_state = self.space_state.ensure_channel_state(str(ch_id))
                 ch_queue = ch_state.ensure_markup_queue()
                 while ch_queue:
                     # If we made 'rate_per_minute' updates per last minute -- don't send more updates

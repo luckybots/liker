@@ -2,6 +2,7 @@ import logging
 import inject
 from pathlib import Path
 from typing import Dict
+from typeguard import typechecked
 
 from liker.state.enabled_channels import EnabledChannels
 from liker.state.channel_state import ChannelState
@@ -16,8 +17,8 @@ class SpaceState:
         self.state_dir = state_dir
         self.channels: Dict[str, ChannelState] = {}
 
-    def ensure_channel_state(self, channel_id) -> ChannelState:
-        str_channel_id = str(channel_id)
+    @typechecked
+    def ensure_channel_state(self, str_channel_id: str) -> ChannelState:
         if str_channel_id not in self.channels:
             path = self.state_dir / f'{str_channel_id}.json'
             self.channels[str_channel_id] = ChannelState(path)

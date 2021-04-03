@@ -1,6 +1,7 @@
 import logging
 from typing import Optional
 import inject
+from typeguard import typechecked
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 from tengine import Config, telegram_utils
 from tengine.preserve.preserver import *
@@ -60,6 +61,30 @@ class ChannelState(Preserver):
 
     def update_markup_queue(self, markup_queue):
         self.state['markup_queue'] = markup_queue
+
+    @typechecked
+    def add_markup_to_queue(self, str_message_id: str, str_markup_queue: str, to_top: bool):
+        queue = self.ensure_markup_queue()
+        if to_top:
+            if str_message_id in queue:
+                del queue[str_message_id]
+            queue = dict([(str_message_id, str_markup_queue)] + list(queue.items()))
+        else:
+            queue[str_message_id] = str_markup_queue
+        self.update_markup_queue(queue)
+
+    @typechecked
+    def try_remove_markup_from_queue(self, str_message_id: str):
+        queue = self.ensure_markup_queue()
+        if str_message_id in queue:
+            del queue[str_message_id]
+            self.update_markup_queue(queue)
+
+    @typechecked
+    def try_get_markup(self, str_message_id: str) -> Optional[str]:
+        queue = self.ensure_markup_queue()
+        str_reply_markup = queue.get(str_message_id, None)
+        return str_reply_markup
 
     def has_reaction_hash(self, reaction_hash: str) -> bool:
         if 'hashes' not in self.last_reactions.state:
