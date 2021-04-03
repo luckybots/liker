@@ -44,7 +44,7 @@ def setup_logs():
             },
         },
         'loggers': {
-            '': {  # root logger
+            '': {
                 'handlers': ['console', 'file', 'error'],
                 'level': 'DEBUG',
                 'propagate': True,

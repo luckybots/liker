@@ -22,7 +22,8 @@ def bind_app_dependencies(binder: Binder):
     binder.bind_to_constructor(TelegramBot, lambda: TelegramBot(token=inject.instance(Config)['bot_token']))
     binder.bind_to_constructor(TelegramCursor,
                                lambda: TelegramCursor(bot=inject.instance(TelegramBot),
-                                                      look_back_days=inject.instance(Config)['bot_look_back_days']))
+                                                      look_back_days=constants.BOT_LOOK_BACK_DAYS,
+                                                      long_polling_timeout=constants.LONG_POLLING_TIMEOUT))
     binder.bind_to_constructor(CommandHub, lambda: CommandHub(config=inject.instance(Config),
                                                               handler_classes=[CommandHandlerEssentials,
                                                                                CommandHandlerPassword,

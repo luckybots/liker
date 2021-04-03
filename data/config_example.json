@@ -3,7 +3,6 @@
   "hash_salt": "",
   "hash_bytes": 0,
   "bot_token": "",
-  "bot_look_back_days": 1.0,
   "admin_password": "",
   "remembered_passwords": { },
   "response_reaction_added": "{}",

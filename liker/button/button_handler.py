@@ -1,6 +1,7 @@
 import logging
 import inject
 from telebot.apihelper import ApiTelegramException
+from telebot.types import InlineKeyboardMarkup
 from tengine import Config, TelegramBot, telegram_utils, Hasher, AbuseDetector
 from tengine.telegram.inbox_handler import *
 
@@ -8,6 +9,7 @@ from liker.state.space_state import SpaceState
 from liker.state.enabled_channels import EnabledChannels
 from liker.button.markup_sync_queue import MarkupSyncQueue
 from liker.setup import constants
+from liker.button import markup_utils
 
 logger = logging.getLogger(__file__)
 
@@ -27,7 +29,17 @@ class ButtonHandler(TelegramInboxHandler):
             return False
 
         message_id = channel_post.id
-        self.markup_sync_queue.add(channel_id=channel_id, message_id=message_id, to_top=True)
+
+        channel_dict = self.enabled_channels.get_channel_dict(channel_id)
+        enabled_reactions = channel_dict['reactions']
+        reply_markup = markup_utils.build_reply_markup(enabled_reactions=enabled_reactions,
+                                                       state_dict=None,
+                                                       handler=constants.BUTTON_HANDLER,
+                                                       case_id='')
+        self.markup_sync_queue.add(channel_id=channel_id,
+                                   message_id=message_id,
+                                   reply_markup=reply_markup,
+                                   to_top=True)
         return True
 
     def callback_query(self, callback_query: types.CallbackQuery) -> bool:
@@ -50,20 +62,34 @@ class ButtonHandler(TelegramInboxHandler):
 
         channel_id = chat_id
         message_id = callback_query.message.id
+        reply_markup_telegram = callback_query.message.reply_markup
+        if reply_markup_telegram is None:
+            logger.error(f'Received a callback without reply markup. Ignoring it. Channel {channel_id}, '
+                         f'message {message_id}')
+            return True
+        # We create a copy of the current Telegram markup to be able to check if it's changed
+        reply_markup_telegram_copy = InlineKeyboardMarkup.de_json(reply_markup_telegram.to_json())
+
+        reply_markup_queued = self.markup_sync_queue.try_get_markup(channel_id=channel_id, message_id=message_id)
+        reply_markup_new = reply_markup_queued if (reply_markup_queued is not None) else reply_markup_telegram_copy
+
         reaction_id = f'{chat_id}_{message_id}_{sender_id}_{reaction}'
         reaction_hash = self.hasher.trimmed(reaction_id, hash_bytes=constants.REACTION_HASH_BYTES)
-
         channel_state = self.space_state.ensure_channel_state(channel_id)
         if channel_state.has_reaction_hash(reaction_hash):
-            channel_state.change_reaction_counter(message_id=message_id, r=reaction, delta=-1)
+            channel_state.change_reaction_counter(reply_markup=reply_markup_new, reaction=reaction, delta=-1)
             channel_state.remove_reaction_hash(reaction_hash)
             response_to_user = self.config['response_reaction_removed'].format(reaction)
         else:
-            channel_state.change_reaction_counter(message_id=message_id, r=reaction, delta=1)
+            channel_state.change_reaction_counter(reply_markup=reply_markup_new, reaction=reaction, delta=1)
             channel_state.add_reaction_hash(reaction_hash)
             response_to_user = self.config['response_reaction_added'].format(reaction)
 
-        self.markup_sync_queue.add(channel_id=channel_id, message_id=message_id)
+        if reply_markup_new.to_json() == reply_markup_telegram.to_json():
+            self.markup_sync_queue.try_remove(channel_id=channel_id, message_id=message_id)
+            logger.debug(f'Dequieuing markup as it was returned to original state')
+        else:
+            self.markup_sync_queue.add(channel_id=channel_id, message_id=message_id, reply_markup=reply_markup_new)
 
         try:
             self.telegram_bot.answer_callback_query(callback_query.id, text=response_to_user)
