@@ -10,4 +10,11 @@ command_params = [
     CommandParam(name='--value',
                  help_str='Value to set',
                  param_type=str),
+    CommandParam(name='--channel_id',
+                 help_str='Channel id',
+                 param_type=str),
+    CommandParam(name='--reactions',
+                 help_str='Channel id',
+                 param_type=str,
+                 nargs='*'),
 ]

@@ -8,6 +8,7 @@ from liker.state.enabled_channels import EnabledChannels
 from liker.state.space_state import SpaceState
 from liker.button.markup_sync_queue import MarkupSyncQueue
 from liker.button.button_handler import ButtonHandler
+from liker.command.handler_set_reactions import CommandHandlerSetReactions
 
 
 def bind_app_dependencies(binder: Binder):
@@ -27,7 +28,8 @@ def bind_app_dependencies(binder: Binder):
     binder.bind_to_constructor(CommandHub, lambda: CommandHub(config=inject.instance(Config),
                                                               handler_classes=[CommandHandlerEssentials,
                                                                                CommandHandlerPassword,
-                                                                               CommandHandlerConfig],
+                                                                               CommandHandlerConfig,
+                                                                               CommandHandlerSetReactions],
                                                               params=command_params,
                                                               telegram_bot=inject.instance(TelegramBot)))
     binder.bind_to_constructor(MessagesLogger,
