@@ -4,7 +4,7 @@ import logging
 from telebot.apihelper import ApiTelegramException
 from typing import Optional
 from telebot.types import InlineKeyboardMarkup
-from tengine import Config, TelegramBot
+from tengine import Config, TelegramBot, telegram_error
 
 from liker.state.enabled_channels import EnabledChannels
 from liker.state.space_state import SpaceState
@@ -97,8 +97,7 @@ class MarkupSynchronizer:
                                                                         message_id=m_id,
                                                                         reply_markup=reply_markup)
                     except ApiTelegramException as ex:
-                        # Error code 400 corresponds to BAD_REQUEST https://core.telegram.org/api/errors#400-bad-request
-                        if ex.error_code == 400:
+                        if ex.error_code == telegram_error.BAD_REQUEST:
                             logger.error(f'Bad params in reply markup, ignoring it: {ex}')
                         else:
                             raise ex
