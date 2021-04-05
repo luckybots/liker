@@ -50,9 +50,7 @@ def build_reply_markup(enabled_reactions: list,
 
 def change_reaction_counter(reply_markup: types.InlineKeyboardMarkup, reaction: str, delta: int):
     for btn in iterate_markup_buttons(reply_markup):
-        _handler, _case_id, button_response = telegram_utils.decode_button_data(btn.callback_data)
-
-        if reaction == button_response:
+        if reaction in btn.text:
             num_str = btn.text.replace(reaction, '').strip()
 
             num = _num_str_to_number(num_str)
@@ -92,3 +90,13 @@ def add_url_button_to_markup(reply_markup: types.InlineKeyboardMarkup,
     new_b = types.InlineKeyboardButton(text, url)
     new_buttons = list(iterate_markup_buttons(reply_markup)) + [new_b]
     return markup_from_buttons(new_buttons)
+
+
+def markup_has_button(reply_markup: types.InlineKeyboardMarkup, text: str):
+    result = False
+    for btn in iterate_markup_buttons(reply_markup):
+        result = text in btn.text
+        if result:
+            break
+    return result
+

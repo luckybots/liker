@@ -4,6 +4,7 @@ from tengine.state.preserver import Preserver
 from liker.state.reaction_hashes import ReactionHashes
 from liker.state.markup_queue import MarkupQueue
 from liker.state.markup_trail import MarkupTrail
+from liker.state.comment_trail import CommentTrail
 
 
 class ChannelState(Preserver):
@@ -16,3 +17,4 @@ class ChannelState(Preserver):
 
         self.markup_queue = MarkupQueue(self.state)
         self.markup_trail = MarkupTrail(self.state)
+        self.comment_trail = CommentTrail(self.state)

@@ -43,3 +43,12 @@ class EnabledChannels(Preserver):
         str_arr = self.state.__dict__['_data'].keys()
         arr = [int(x) for x in str_arr]
         return arr
+
+    def try_get_channel_id_for_linked_chat_id(self, linked_chat_id) -> Optional[int]:
+        result = None
+        for ch_id in self.enabled_channel_ids():
+            ch_dict = self.get_channel_dict(str(ch_id))
+            if ch_dict['linked_chat_id'] == linked_chat_id:
+                result = ch_id
+                break
+        return result
