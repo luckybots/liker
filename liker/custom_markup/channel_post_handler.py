@@ -7,9 +7,10 @@ from tengine.telegram.inbox_handler import *
 
 from liker.state.space_state import SpaceState
 from liker.state.enabled_channels import EnabledChannels
-from liker.button.markup_synchronizer import MarkupSynchronizer
+from liker.custom_markup.markup_synchronizer import MarkupSynchronizer
 from liker.setup import constants
-from liker.button import markup_utils
+from liker.custom_markup import markup_utils
+from liker.command import set_reactions_utils
 
 logger = logging.getLogger(__file__)
 
@@ -28,9 +29,16 @@ class ChannelPostHandler(TelegramInboxHandler):
 
         str_channel_id = str(channel_id)
         if not self.enabled_channels.is_enabled(str_channel_id):
-            is_enabled = self._try_enable_for_channel(channel_id)
-            if not is_enabled:
+            did_enabled = set_reactions_utils.try_set_reactions(config=self.config,
+                                                                telegram_bot=self.telegram_bot,
+                                                                enabled_channels=self.enabled_channels,
+                                                                channel_id=channel_id,
+                                                                reactions=constants.DEFAULT_REACTIONS,
+                                                                reply_to_chat_id=None)
+            if not did_enabled:
                 return False
+            else:
+                logger.info(f'Automatically enabled liker for channel: {channel_id}')
 
         message_id = channel_post.id
 
@@ -102,7 +110,3 @@ class ChannelPostHandler(TelegramInboxHandler):
             logger.info(f'Cannot answer callback query, most likely it is expired: {ex}')
 
         return True
-
-    def _try_enable_for_channel(self, channel_id: int) -> bool:
-
-        pass

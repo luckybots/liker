@@ -7,8 +7,8 @@ from tengine.telegram.constants import TELEGRAM_USER_ID
 
 from liker.state.enabled_channels import EnabledChannels
 from liker.state.space_state import SpaceState
-from liker.button import markup_utils
-from liker.button.markup_synchronizer import MarkupSynchronizer
+from liker.custom_markup import markup_utils
+from liker.custom_markup.markup_synchronizer import MarkupSynchronizer
 from liker.setup import constants
 
 logger = logging.getLogger(__file__)

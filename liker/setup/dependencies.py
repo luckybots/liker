@@ -6,9 +6,9 @@ from liker.setup import constants
 from liker.command.params import command_params
 from liker.state.enabled_channels import EnabledChannels
 from liker.state.space_state import SpaceState
-from liker.button.markup_synchronizer import MarkupSynchronizer
-from liker.button.button_handler import ButtonHandler
-from liker.button.comment_handler import CommentHandler
+from liker.custom_markup.markup_synchronizer import MarkupSynchronizer
+from liker.custom_markup.channel_post_handler import ChannelPostHandler
+from liker.custom_markup.comment_handler import CommentHandler
 from liker.command.handler_set_reactions import CommandHandlerSetReactions
 
 
@@ -41,7 +41,7 @@ def bind_app_dependencies(binder: Binder):
     binder.bind_to_constructor(TelegramInboxHub,
                                lambda: TelegramInboxHub(telegram_cursor=inject.instance(TelegramCursor),
                                                         chain_handlers=[inject.instance(CommandHub),
-                                                                        inject.instance(ButtonHandler),
+                                                                        inject.instance(ChannelPostHandler),
                                                                         inject.instance(CommentHandler)]))
     binder.bind_to_constructor(ChatIdPreserver,
                                lambda: ChatIdPreserver(state_file_path=constants.chat_ids_state_path()))
@@ -49,7 +49,7 @@ def bind_app_dependencies(binder: Binder):
                                lambda: EnabledChannels(state_file_path=constants.enabled_channels_state_path()))
     binder.bind_to_constructor(SpaceState, lambda: SpaceState(constants.space_dir()))
     binder.bind_to_constructor(MarkupSynchronizer, lambda: MarkupSynchronizer())
-    binder.bind_to_constructor(ButtonHandler, lambda: ButtonHandler())
+    binder.bind_to_constructor(ChannelPostHandler, lambda: ChannelPostHandler())
     binder.bind_to_constructor(CommentHandler, lambda: CommentHandler())
     binder.bind_to_constructor(AbuseDetector, lambda: AbuseDetector(period_seconds=constants.ABUSE_PERIOD_SECONDS,
                                                                     abuse_threshold=constants.ABUSE_THRESHOLD))
