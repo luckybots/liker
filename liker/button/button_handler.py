@@ -44,13 +44,14 @@ class ButtonHandler(TelegramInboxHandler):
         return True
 
     def callback_query(self, callback_query: types.CallbackQuery) -> bool:
-        handler, _case_id, reaction = telegram_utils.decode_button_data(callback_query.data)
+        button_data = callback_query.data
+        if not telegram_utils.is_button_data_encoded(button_data):
+            return False
+        handler, _case_id, reaction = telegram_utils.decode_button_data(button_data)
         if handler != constants.BUTTON_HANDLER:
             return False
-
         if callback_query.message is None:
             return False
-
         chat_id = callback_query.message.chat.id
         if not self.enabled_channels.is_enabled(str(chat_id)):
             return False

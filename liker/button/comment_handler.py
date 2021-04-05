@@ -15,6 +15,11 @@ logger = logging.getLogger(__file__)
 
 
 class CommentHandler(TelegramInboxHandler):
+    """
+    Handles channel post comments in the linked group. Updates the counter of the comments.
+    Unfortunately the bot can't receive events of message deletion -- thus the counter doesn't decrease in case of
+    comments were deleted.
+    """
     enabled_chats = inject.attr(EnabledChannels)
     space_state = inject.attr(SpaceState)
     markup_synchronizer = inject.attr(MarkupSynchronizer)
