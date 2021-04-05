@@ -20,6 +20,6 @@ class SpaceState:
     @typechecked
     def ensure_channel_state(self, str_channel_id: str) -> ChannelState:
         if str_channel_id not in self.channels:
-            path = self.state_dir / f'{str_channel_id}.json'
-            self.channels[str_channel_id] = ChannelState(path)
+            self.channels[str_channel_id] = ChannelState(state_dir=self.state_dir,
+                                                         str_channel_id=str_channel_id)
         return self.channels[str_channel_id]

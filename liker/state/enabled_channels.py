@@ -1,6 +1,7 @@
 from typeguard import typechecked
-from typing import List
-from tengine.preserve.preserver import *
+from typing import List, Optional
+from tengine.state.preserver import *
+from tengine import telegram_utils
 
 
 class EnabledChannels(Preserver):
@@ -12,21 +13,30 @@ class EnabledChannels(Preserver):
         return str_channel_id in self.state
 
     @typechecked
-    def get_channel_dict(self, str_channel_id: str):
+    def get_channel_dict(self, str_channel_id: str) -> dict:
         assert self.is_enabled(str_channel_id)
         return self.state[str_channel_id]
 
     @typechecked
     def set_channel_dict(self, str_channel_id: str, channel_dict: dict):
+        if not telegram_utils.is_int_chat_id(str_channel_id):
+            raise ValueError('str_channel_id should be a number')
         self.state[str_channel_id] = channel_dict
 
     @typechecked
-    def update_channel_dict(self, str_channel_id: str, reactions: List[str]):
+    def update_channel_dict(self,
+                            str_channel_id:
+                            str, reactions: List[str],
+                            linked_chat_id: Optional[int]):
+        new_fields = {
+            'reactions': reactions,
+            'linked_chat_id': linked_chat_id
+        }
         if self.is_enabled(str_channel_id):
             channel_dict = self.get_channel_dict(str_channel_id)
-            channel_dict['reactions'] = reactions
+            channel_dict.update(new_fields)
         else:
-            channel_dict = {'reactions': reactions}
+            channel_dict = new_fields
         self.set_channel_dict(str_channel_id=str_channel_id, channel_dict=channel_dict)
 
     def enabled_channel_ids(self) -> List[int]:

@@ -1,6 +1,27 @@
+import logging
 from telebot import types
-from typing import Optional
+from typing import Optional, Iterable
 from tengine import telegram_utils
+
+logger = logging.getLogger(__file__)
+
+
+def chunks(lst, n):
+    """Yield successive n-sized chunks from lst."""
+    for i in range(0, len(lst), n):
+        yield lst[i:i + n]
+
+
+def _num_str_to_number(num_str):
+    result = None
+    if num_str == '':
+        result = 0
+    else:
+        try:
+            result = int(num_str)
+        except ValueError:
+            pass
+    return result
 
 
 def build_reply_markup(enabled_reactions: list,
@@ -24,6 +45,50 @@ def build_reply_markup(enabled_reactions: list,
                                        callback_data=data)
         buttons_obj.append(b)
 
+    return markup_from_buttons(buttons_obj)
+
+
+def change_reaction_counter(reply_markup: types.InlineKeyboardMarkup, reaction: str, delta: int):
+    for btn in iterate_markup_buttons(reply_markup):
+        _handler, _case_id, button_response = telegram_utils.decode_button_data(btn.callback_data)
+
+        if reaction == button_response:
+            num_str = btn.text.replace(reaction, '').strip()
+
+            num = _num_str_to_number(num_str)
+            if num is None:
+                logger.error(f'Cannot parse button reaction state: {btn.text}')
+                continue
+            num += delta
+            num_str = '' if (num == 0) else f'{num}'
+
+            t_new = f'{reaction}{num_str}'
+            btn.text = t_new
+            return
+    raise Exception(f'Can not change reaction counter: {reply_markup.to_json()}')
+
+
+def iterate_markup_buttons(reply_markup: types.InlineKeyboardMarkup) -> Iterable[types.InlineKeyboardButton]:
+    for row in reply_markup.keyboard:
+        for btn in row:
+            yield btn
+
+
+def markup_from_buttons(buttons: Iterable[types.InlineKeyboardButton]) -> types.InlineKeyboardMarkup:
+    buttons = list(buttons)
+    if len(buttons) == 4:
+        rows = chunks(buttons, 2)
+    else:
+        rows = chunks(buttons, 3)
     reply_markup = types.InlineKeyboardMarkup()
-    reply_markup.add(*buttons_obj)
+    for r in rows:
+        reply_markup.add(*r)
     return reply_markup
+
+
+def add_url_button_to_markup(reply_markup: types.InlineKeyboardMarkup,
+                             text: str,
+                             url: str):
+    new_b = types.InlineKeyboardButton(text, url)
+    new_buttons = list(iterate_markup_buttons(reply_markup)) + [new_b]
+    return markup_from_buttons(new_buttons)
