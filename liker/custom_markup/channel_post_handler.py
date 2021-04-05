@@ -14,7 +14,7 @@ from liker.button import markup_utils
 logger = logging.getLogger(__file__)
 
 
-class ButtonHandler(TelegramInboxHandler):
+class ChannelPostHandler(TelegramInboxHandler):
     config = inject.attr(Config)
     hasher = inject.attr(Hasher)
     telegram_bot = inject.attr(TelegramBot)
@@ -25,9 +25,12 @@ class ButtonHandler(TelegramInboxHandler):
 
     def channel_post(self, channel_post: types.Message) -> bool:
         channel_id: int = channel_post.chat.id
+
         str_channel_id = str(channel_id)
         if not self.enabled_channels.is_enabled(str_channel_id):
-            return False
+            is_enabled = self._try_enable_for_channel(channel_id)
+            if not is_enabled:
+                return False
 
         message_id = channel_post.id
 
@@ -35,7 +38,7 @@ class ButtonHandler(TelegramInboxHandler):
         enabled_reactions = channel_dict['reactions']
         reply_markup = markup_utils.build_reply_markup(enabled_reactions=enabled_reactions,
                                                        state_dict=None,
-                                                       handler=constants.BUTTON_HANDLER,
+                                                       handler=constants.CHANNEL_POST_HANDLER,
                                                        case_id='')
         self.markup_synchronizer.add(channel_id=channel_id,
                                      message_id=message_id,
@@ -48,7 +51,7 @@ class ButtonHandler(TelegramInboxHandler):
         if not telegram_utils.is_button_data_encoded(button_data):
             return False
         handler, _case_id, reaction = telegram_utils.decode_button_data(button_data)
-        if handler != constants.BUTTON_HANDLER:
+        if handler != constants.CHANNEL_POST_HANDLER:
             return False
         if callback_query.message is None:
             return False
@@ -99,3 +102,7 @@ class ButtonHandler(TelegramInboxHandler):
             logger.info(f'Cannot answer callback query, most likely it is expired: {ex}')
 
         return True
+
+    def _try_enable_for_channel(self, channel_id: int) -> bool:
+
+        pass
