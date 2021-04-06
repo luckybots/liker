@@ -23,3 +23,7 @@ class SpaceState:
             self.channels[str_channel_id] = ChannelState(state_dir=self.state_dir,
                                                          str_channel_id=str_channel_id)
         return self.channels[str_channel_id]
+
+    def update(self):
+        for ch in self.channels.values():
+            ch.update()

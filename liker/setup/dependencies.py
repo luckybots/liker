@@ -15,7 +15,8 @@ from liker.command.handler_set_reactions import CommandHandlerSetReactions
 def bind_app_dependencies(binder: Binder):
     binder.bind_to_constructor(App, lambda: App(update_funcs=[inject.instance(TelegramInboxHub).update,
                                                               inject.instance(MarkupSynchronizer).update,
-                                                              inject.instance(AbuseJanitor).update],
+                                                              inject.instance(AbuseJanitor).update,
+                                                              inject.instance(SpaceState).update],
                                                 update_seconds=constants.UPDATE_SECONDS,
                                                 restart_seconds=constants.RESTART_SECONDS))
     binder.bind(Config, Config(config_path=constants.config_path(),

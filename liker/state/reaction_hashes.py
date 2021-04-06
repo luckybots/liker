@@ -1,13 +1,14 @@
 import inject
 from tengine import Config
-from tengine.state.preserver import *
+from tengine.state.timed_preserver import *
 
 
-class ReactionHashes(Preserver):
+class ReactionHashes(TimedPreserver):
     config = inject.attr(Config)
 
     def __init__(self, state_file_path: Path):
-        super().__init__(state_file_path)
+        save_period = self.config['last_reactions_save_seconds']
+        super().__init__(state_file_path, save_period=save_period)
 
     def has(self, reaction_hash: str) -> bool:
         if 'hashes' not in self.state:
