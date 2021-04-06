@@ -99,6 +99,9 @@ class MarkupSynchronizer:
                     except ApiTelegramException as ex:
                         if ex.error_code == telegram_error.BAD_REQUEST:
                             logger.error(f'Bad params in reply markup, ignoring it: {ex}')
+                        elif ex.error_code == telegram_error.TOO_MANY_REQUESTS:
+                            logger.error(f'Got TOO_MANY_REQUESTS error, will skip current channel update: {ex}')
+                            break
                         else:
                             raise ex
 
