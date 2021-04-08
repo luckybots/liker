@@ -1,7 +1,9 @@
 import logging
 from telebot import types
-from typing import Optional, Iterable
+from typing import Iterable, List, Optional
 from tengine import telegram_utils
+
+from liker.setup import constants
 
 logger = logging.getLogger(__file__)
 
@@ -24,27 +26,31 @@ def _num_str_to_number(num_str):
     return result
 
 
-def build_reply_markup(enabled_reactions: list,
-                       state_dict: Optional[dict],
-                       handler: str,
-                       case_id: str) -> types.InlineKeyboardMarkup:
-    state_reactions = {}
-    if (state_dict is not None) and ('reactions' in state_dict):
-        state_reactions = state_dict['reactions']
+def extend_reply_markup(current_markup: Optional[types.InlineKeyboardMarkup],
+                        enabled_reactions: list,
+                        handler: str,
+                        case_id: str,
+                        include_comment=True) -> types.InlineKeyboardMarkup:
+    current_buttons: List[types.InlineKeyboardButton] = [] if (current_markup is None) \
+        else list(iterate_markup_buttons(current_markup))
+
+    if include_comment \
+            and (constants.COMMENT_TEXT not in enabled_reactions) \
+            and any((b for b in current_buttons if constants.COMMENT_TEXT in b.text)):
+        enabled_reactions = enabled_reactions.copy()
+        enabled_reactions.append(constants.COMMENT_TEXT)
+
     buttons_obj = []
     for r in enabled_reactions:
-        if r in state_reactions:
-            counter = state_reactions[r]
-            text = f'{r}{counter}'
-        else:
+        cur_btn = next((b for b in current_buttons if r in b.text), None)
+        if cur_btn is None:
             text = f'{r}'
-        data = telegram_utils.encode_button_data(handler=handler,
-                                                 case_id=case_id,
-                                                 response=r)
-        b = types.InlineKeyboardButton(text=text,
-                                       callback_data=data)
-        buttons_obj.append(b)
-
+            data = telegram_utils.encode_button_data(handler=handler,
+                                                     case_id=case_id,
+                                                     response=r)
+            cur_btn = types.InlineKeyboardButton(text=text,
+                                                 callback_data=data)
+        buttons_obj.append(cur_btn)
     return markup_from_buttons(buttons_obj)
 
 

@@ -73,42 +73,49 @@ class MarkupSynchronizer:
                 ch_state = self.space_state.ensure_channel_state(str(ch_id))
                 ch_queue = ch_state.markup_queue.ensure_queue()
                 while ch_queue:
-                    # If we made 'rate_per_minute' updates per last minute -- don't send more updates
-                    if len(upd_times) >= rate_per_minute:
-                        break
-
-                    # Make elastic delay time
-                    slowdown_factor = len(upd_times) / rate_per_minute
-                    cur_timeout = rate_min_seconds + slowdown_factor * rate_span
-                    logger.debug(f'queue timeout: {cur_timeout}')
-                    if cur_timeout > dt_to_consume:
-                        break
-
-                    m_id_str = list(ch_queue.keys())[0]
-                    reply_markup_str = ch_queue[m_id_str]
-                    m_id = int(m_id_str)
-
-                    reply_markup = InlineKeyboardMarkup.de_json(reply_markup_str)
-
-                    dt_to_consume -= cur_timeout
-                    upd_times.append(cur_time)
+                    m_id_str = None
+                    reply_markup_str = None
                     try:
+                        m_id_str = list(ch_queue.keys())[0]
+                        reply_markup_str = ch_queue[m_id_str]
+
+                        # If we made 'rate_per_minute' updates per last minute -- don't send more updates
+                        if len(upd_times) >= rate_per_minute:
+                            break
+
+                        # Make elastic delay time
+                        slowdown_factor = len(upd_times) / rate_per_minute
+                        cur_timeout = rate_min_seconds + slowdown_factor * rate_span
+                        logger.debug(f'queue timeout: {cur_timeout}')
+                        if cur_timeout > dt_to_consume:
+                            break
+
+                        m_id = int(m_id_str)
+
+                        reply_markup = InlineKeyboardMarkup.de_json(reply_markup_str)
+
+                        dt_to_consume -= cur_timeout
+                        upd_times.append(cur_time)
+
                         self.telegram_bot.bot.edit_message_reply_markup(chat_id=ch_id,
                                                                         message_id=m_id,
                                                                         reply_markup=reply_markup)
+                    # We don't break loop for all exceptions except TOO_MANY_REQUESTS to avoid infitie error loop
                     except ApiTelegramException as ex:
-                        if ex.error_code == telegram_error.BAD_REQUEST:
-                            logger.error(f'Bad params in reply markup, ignoring it: {ex}')
-                        elif ex.error_code == telegram_error.TOO_MANY_REQUESTS:
+                        if ex.error_code == telegram_error.TOO_MANY_REQUESTS:
                             logger.error(f'Got TOO_MANY_REQUESTS error, will skip current channel update: {ex}')
                             break
                         else:
-                            raise ex
+                            logger.exception(ex)
+                    except Exception as ex:
+                        logger.exception(ex)
 
                     # We delete markup from the queue only after it's synchronized
-                    ch_state.markup_trail.add(str_message_id=m_id_str,
-                                              str_markup=reply_markup_str)
-                    del ch_queue[m_id_str]
+                    if m_id_str is not None:
+                        if reply_markup_str is not None:
+                            ch_state.markup_trail.add(str_message_id=m_id_str,
+                                                      str_markup=reply_markup_str)
+                        del ch_queue[m_id_str]
 
                 self.channel_update_times[ch_id] = upd_times
                 ch_state.markup_queue.update_queue(ch_queue)

@@ -10,6 +10,8 @@ from liker.custom_markup.markup_synchronizer import MarkupSynchronizer
 from liker.custom_markup.channel_post_handler import ChannelPostHandler
 from liker.custom_markup.comment_handler import CommentHandler
 from liker.command.handler_set_reactions import CommandHandlerSetReactions
+from liker.enabling_manager import EnablingManager
+from liker.command.handler_update_markup import CommandHandlerUpdateMarkup
 
 
 def bind_app_dependencies(binder: Binder):
@@ -31,7 +33,8 @@ def bind_app_dependencies(binder: Binder):
                                                               handler_classes=[CommandHandlerEssentials,
                                                                                CommandHandlerPassword,
                                                                                CommandHandlerConfig,
-                                                                               CommandHandlerSetReactions],
+                                                                               CommandHandlerSetReactions,
+                                                                               CommandHandlerUpdateMarkup],
                                                               params=command_params,
                                                               telegram_bot=inject.instance(TelegramBot)))
     binder.bind_to_constructor(MessagesLogger,
@@ -56,3 +59,4 @@ def bind_app_dependencies(binder: Binder):
                                                                     abuse_threshold=constants.ABUSE_THRESHOLD))
     binder.bind_to_constructor(AbuseJanitor, lambda: AbuseJanitor(abuse_detector=inject.instance(AbuseDetector),
                                                                   period_seconds=constants.ABUSE_JANITOR_SECONDS))
+    binder.bind_to_constructor(EnablingManager, lambda: EnablingManager())

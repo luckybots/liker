@@ -5,7 +5,7 @@ from tengine import TelegramBot, telegram_utils
 from tengine import Config
 
 from liker.state.enabled_channels import EnabledChannels
-from liker.command import set_reactions_utils
+from liker.enabling_manager import EnablingManager
 
 logger = logging.getLogger(__file__)
 
@@ -14,6 +14,7 @@ class CommandHandlerSetReactions(CommandHandler):
     enabled_channels = inject.attr(EnabledChannels)
     telegram_bot = inject.attr(TelegramBot)
     config = inject.attr(Config)
+    enabling_manager = inject.attr(EnablingManager)
 
     def get_cards(self) -> Iterable[CommandCard]:
         return [CommandCard(command_str='/set_reactions',
@@ -24,6 +25,7 @@ class CommandHandlerSetReactions(CommandHandler):
     def handle(self,
                config: Config,
                chat_id,
+               message: Message,
                args: Namespace,
                telegram_bot: TelegramBot,
                command_parser: CommandParser):
@@ -45,12 +47,9 @@ class CommandHandlerSetReactions(CommandHandler):
                                             text='channel_id should be a number or start from @')
                 return
 
-            set_successfully = set_reactions_utils.try_set_reactions(config=self.config,
-                                                                     telegram_bot=self.telegram_bot,
-                                                                     enabled_channels=self.enabled_channels,
-                                                                     channel_id=channel_id,
-                                                                     reactions=reactions,
-                                                                     reply_to_chat_id=chat_id)
+            set_successfully = self.enabling_manager.try_set_reactions(channel_id=channel_id,
+                                                                       reactions=reactions,
+                                                                       reply_to_chat_id=chat_id)
             if not set_successfully:
                 return
 

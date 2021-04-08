@@ -10,7 +10,7 @@ from liker.state.enabled_channels import EnabledChannels
 from liker.custom_markup.markup_synchronizer import MarkupSynchronizer
 from liker.setup import constants
 from liker.custom_markup import markup_utils
-from liker.command import set_reactions_utils
+from liker.enabling_manager import EnablingManager
 
 logger = logging.getLogger(__file__)
 
@@ -23,18 +23,16 @@ class ChannelPostHandler(TelegramInboxHandler):
     space_state = inject.attr(SpaceState)
     markup_synchronizer = inject.attr(MarkupSynchronizer)
     abuse_detector = inject.attr(AbuseDetector)
+    enabling_manager = inject.attr(EnablingManager)
 
     def channel_post(self, channel_post: types.Message) -> bool:
         channel_id: int = channel_post.chat.id
 
         str_channel_id = str(channel_id)
         if not self.enabled_channels.is_enabled(str_channel_id):
-            did_enabled = set_reactions_utils.try_set_reactions(config=self.config,
-                                                                telegram_bot=self.telegram_bot,
-                                                                enabled_channels=self.enabled_channels,
-                                                                channel_id=channel_id,
-                                                                reactions=constants.DEFAULT_REACTIONS,
-                                                                reply_to_chat_id=None)
+            did_enabled = self.enabling_manager.try_set_reactions(channel_id=channel_id,
+                                                                  reactions=constants.DEFAULT_REACTIONS,
+                                                                  reply_to_chat_id=None)
             if not did_enabled:
                 return False
             else:
@@ -44,10 +42,10 @@ class ChannelPostHandler(TelegramInboxHandler):
 
         channel_dict = self.enabled_channels.get_channel_dict(str_channel_id)
         enabled_reactions = channel_dict['reactions']
-        reply_markup = markup_utils.build_reply_markup(enabled_reactions=enabled_reactions,
-                                                       state_dict=None,
-                                                       handler=constants.CHANNEL_POST_HANDLER,
-                                                       case_id='')
+        reply_markup = markup_utils.extend_reply_markup(current_markup=None,
+                                                        enabled_reactions=enabled_reactions,
+                                                        handler=constants.CHANNEL_POST_HANDLER,
+                                                        case_id='')
         self.markup_synchronizer.add(channel_id=channel_id,
                                      message_id=message_id,
                                      reply_markup=reply_markup,
@@ -100,7 +98,7 @@ class ChannelPostHandler(TelegramInboxHandler):
 
         if reply_markup_new.to_json() == reply_markup_telegram.to_json():
             self.markup_synchronizer.try_remove(channel_id=channel_id, message_id=message_id)
-            logger.debug(f'Dequieuing markup as it was returned to original state')
+            logger.debug(f'De-queuing markup as it was returned to original state')
         else:
             self.markup_synchronizer.add(channel_id=channel_id, message_id=message_id, reply_markup=reply_markup_new)
 
