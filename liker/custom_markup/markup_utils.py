@@ -1,7 +1,7 @@
 import logging
 from telebot import types
 from typing import Iterable, List, Optional
-from tengine import telegram_utils
+from tengine import telegram_bot_utils
 
 from liker.setup import constants
 
@@ -45,9 +45,9 @@ def extend_reply_markup(current_markup: Optional[types.InlineKeyboardMarkup],
         cur_btn = next((b for b in current_buttons if r in b.text), None)
         if cur_btn is None:
             text = f'{r}'
-            data = telegram_utils.encode_button_data(handler=handler,
-                                                     case_id=case_id,
-                                                     response=r)
+            data = telegram_bot_utils.encode_button_data(handler=handler,
+                                                         case_id=case_id,
+                                                         response=r)
             cur_btn = types.InlineKeyboardButton(text=text,
                                                  callback_data=data)
         buttons_obj.append(cur_btn)
@@ -57,7 +57,8 @@ def extend_reply_markup(current_markup: Optional[types.InlineKeyboardMarkup],
 def change_reaction_counter(reply_markup: types.InlineKeyboardMarkup, reaction: str, delta: int):
     for btn in iterate_markup_buttons(reply_markup):
         if reaction in btn.text:
-            num_str = btn.text.replace(reaction, '').strip()
+            prefix = btn.text.rstrip('0123456789-')
+            num_str = btn.text.replace(prefix, '')
 
             num = _num_str_to_number(num_str)
             if num is None:
@@ -66,7 +67,7 @@ def change_reaction_counter(reply_markup: types.InlineKeyboardMarkup, reaction: 
             num += delta
             num_str = '' if (num == 0) else f'{num}'
 
-            t_new = f'{reaction}{num_str}'
+            t_new = f'{prefix}{num_str}'
             btn.text = t_new
             return
     raise Exception(f'Can not change reaction counter: {reply_markup.to_json()}')

@@ -1,7 +1,7 @@
 import inject
 import logging
 from tengine.command.command_handler import *
-from tengine import TelegramBot, telegram_utils
+from tengine import TelegramBot, telegram_bot_utils
 from tengine import Config
 
 from liker.state.enabled_channels import EnabledChannels
@@ -42,7 +42,7 @@ class CommandHandlerSetReactions(CommandHandler):
                                             text='--reactions required')
                 return
 
-            if not telegram_utils.is_proper_chat_id(channel_id):
+            if not telegram_bot_utils.is_proper_chat_id(channel_id):
                 self.telegram_bot.send_text(chat_id=chat_id,
                                             text='channel_id should be a number or start from @')
                 return

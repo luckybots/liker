@@ -2,7 +2,7 @@ import logging
 import inject
 from telebot.apihelper import ApiTelegramException
 from telebot.types import InlineKeyboardMarkup
-from tengine import Config, TelegramBot, telegram_utils, Hasher, AbuseDetector
+from tengine import Config, TelegramBot, telegram_bot_utils, Hasher, AbuseDetector
 from tengine.telegram.inbox_handler import *
 
 from liker.state.space_state import SpaceState
@@ -54,9 +54,9 @@ class ChannelPostHandler(TelegramInboxHandler):
 
     def callback_query(self, callback_query: types.CallbackQuery) -> bool:
         button_data = callback_query.data
-        if not telegram_utils.is_button_data_encoded(button_data):
+        if not telegram_bot_utils.is_button_data_encoded(button_data):
             return False
-        handler, _case_id, reaction = telegram_utils.decode_button_data(button_data)
+        handler, _case_id, reaction = telegram_bot_utils.decode_button_data(button_data)
         if handler != constants.CHANNEL_POST_HANDLER:
             return False
         if callback_query.message is None:

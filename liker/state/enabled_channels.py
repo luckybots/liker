@@ -1,7 +1,7 @@
 from typeguard import typechecked
 from typing import List, Optional
 from tengine.state.preserver import *
-from tengine import telegram_utils
+from tengine import telegram_bot_utils
 
 
 class EnabledChannels(Preserver):
@@ -19,7 +19,7 @@ class EnabledChannels(Preserver):
 
     @typechecked
     def set_channel_dict(self, str_channel_id: str, channel_dict: dict):
-        if not telegram_utils.is_int_chat_id(str_channel_id):
+        if not telegram_bot_utils.is_int_chat_id(str_channel_id):
             raise ValueError('str_channel_id should be a number')
         self.state[str_channel_id] = channel_dict
 

@@ -12,6 +12,7 @@ from liker.custom_markup.comment_handler import CommentHandler
 from liker.command.handler_set_reactions import CommandHandlerSetReactions
 from liker.enabling_manager import EnablingManager
 from liker.command.handler_update_markup import CommandHandlerUpdateMarkup
+from liker.command.handler_take_message import CommandHandlerTakeMessage
 
 
 def bind_app_dependencies(binder: Binder):
@@ -25,6 +26,12 @@ def bind_app_dependencies(binder: Binder):
                                example_path=constants.config_example_path()))
     binder.bind_to_constructor(Hasher, lambda: Hasher(config=inject.instance(Config)))
     binder.bind_to_constructor(TelegramBot, lambda: TelegramBot(token=inject.instance(Config)['bot_token']))
+    binder.bind_to_constructor(TelegramApi,
+                               lambda: TelegramApi(
+                                   api_session_name=str(constants.data_dir()
+                                                        / inject.instance(Config)['telegram_api_session']),
+                                   api_id=inject.instance(Config)['telegram_api_id'],
+                                   api_hash=inject.instance(Config)['telegram_api_hash']))
     binder.bind_to_constructor(TelegramCursor,
                                lambda: TelegramCursor(bot=inject.instance(TelegramBot),
                                                       look_back_days=constants.BOT_LOOK_BACK_DAYS,
@@ -34,7 +41,8 @@ def bind_app_dependencies(binder: Binder):
                                                                                CommandHandlerPassword,
                                                                                CommandHandlerConfig,
                                                                                CommandHandlerSetReactions,
-                                                                               CommandHandlerUpdateMarkup],
+                                                                               CommandHandlerUpdateMarkup,
+                                                                               CommandHandlerTakeMessage],
                                                               params=command_params,
                                                               telegram_bot=inject.instance(TelegramBot)))
     binder.bind_to_constructor(MessagesLogger,

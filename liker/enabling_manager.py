@@ -2,7 +2,7 @@ from typing import Optional
 import logging
 import inject
 from telebot.apihelper import ApiTelegramException
-from tengine import Config, telegram_utils, TelegramBot
+from tengine import Config, telegram_bot_utils, TelegramBot
 
 from liker.state.enabled_channels import EnabledChannels
 
@@ -19,7 +19,7 @@ class EnablingManager:
                           reactions: list,
                           reply_to_chat_id: Optional[int]) -> bool:
         enable_only_for = self.config['enable_only_for']
-        if enable_only_for and (telegram_utils.to_int_chat_id_if_possible(channel_id) not in enable_only_for):
+        if enable_only_for and (telegram_bot_utils.to_int_chat_id_if_possible(channel_id) not in enable_only_for):
             self._try_reply(chat_id=reply_to_chat_id,
                             text=f'Cannot enable for channel {channel_id}')
             return False

@@ -1,7 +1,7 @@
 import logging
 import inject
 from telebot.types import InlineKeyboardMarkup
-from tengine import telegram_utils
+from tengine import telegram_bot_utils
 from tengine.telegram.inbox_handler import *
 from tengine.telegram.constants import TELEGRAM_USER_ID
 
@@ -25,7 +25,7 @@ class CommentHandler(TelegramInboxHandler):
     markup_synchronizer = inject.attr(MarkupSynchronizer)
 
     def message(self, message: types.Message) -> bool:
-        if not telegram_utils.is_group_message(message):
+        if not telegram_bot_utils.is_group_message(message):
             return False
 
         if self._check_forward_from_channel(message):
@@ -126,7 +126,7 @@ class CommentHandler(TelegramInboxHandler):
                                group_id: int,
                                thread_message_id: int) -> InlineKeyboardMarkup:
         if not markup_utils.markup_has_button(reply_markup, constants.COMMENT_TEXT):
-            short_group_id = telegram_utils.get_short_chat_id(group_id)
+            short_group_id = telegram_bot_utils.get_short_chat_id(group_id)
             comments_url = f'https://t.me/c/{short_group_id}/999999999?thread={thread_message_id}'
             reply_markup = markup_utils.add_url_button_to_markup(reply_markup=reply_markup,
                                                                  text=constants.COMMENT_TEXT,
