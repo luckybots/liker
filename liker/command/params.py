@@ -14,4 +14,7 @@ command_params = tengine_command_params.params + [
     CommandParam(name='--bot_token',
                  help_str='Bot token',
                  param_type=str),
+    CommandParam(name='--n',
+                 help_str='N items to take',
+                 param_type=int),
 ]

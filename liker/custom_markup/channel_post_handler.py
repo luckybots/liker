@@ -50,6 +50,7 @@ class ChannelPostHandler(TelegramInboxHandler):
                                      message_id=message_id,
                                      reply_markup=reply_markup,
                                      to_top=True)
+        logger.info(f'Scheduled markup adding for {channel_id}, message {message_id}')
         return True
 
     def callback_query(self, callback_query: types.CallbackQuery) -> bool:
