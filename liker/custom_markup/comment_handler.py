@@ -105,7 +105,8 @@ class CommentHandler(TelegramInboxHandler):
                                                    thread_message_id=thread_message_id)
         markup_utils.change_reaction_counter(reply_markup,
                                              reaction=constants.COMMENT_TEXT,
-                                             delta=1)
+                                             value=1,
+                                             is_delta=True)
         self.markup_synchronizer.add(channel_id=channel_id,
                                      message_id=channel_message_id,
                                      reply_markup=reply_markup,

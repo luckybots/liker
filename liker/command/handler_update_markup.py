@@ -1,7 +1,9 @@
 import inject
 import logging
 from tengine.command.command_handler import *
-from telebot.types import InlineKeyboardMarkup
+from telebot.types import InlineKeyboardMarkup, Message
+from typing import Tuple
+from tengine import CommandMissingArgError
 
 from liker.state.enabled_channels import EnabledChannels
 from liker.state.space_state import SpaceState
@@ -18,27 +20,15 @@ class CommandHandlerUpdateMarkup(CommandHandler):
     def get_cards(self) -> Iterable[CommandCard]:
         return [CommandCard(command_str='/update_markup',
                             description='Set buttons according to reactions enabled',
-                            is_admin=False),
+                            is_admin=True),
+                CommandCard(command_str='/force_counter',
+                            description='Set custom value for the reactions counter',
+                            is_admin=True),
                 ]
 
-    def handle(self,
-               sender_chat_id,
-               sender_message: Message,
-               args: Namespace):
-        if args.command == '/update_markup':
-            ref_message: Message = sender_message.reply_to_message
-            if (ref_message is None) or (ref_message.forward_from_chat is None):
-                self.telegram_bot.send_text(chat_id=sender_chat_id,
-                                            text='Send /update_markup in comments to target channel post')
-                return
-
-            channel_id = ref_message.forward_from_chat.id
-            if not self.enabled_channels.is_enabled(str(channel_id)):
-                self.telegram_bot.send_text(chat_id=sender_chat_id,
-                                            text='Liker is not enabled for the given channel')
-                return
-
-            channel_message_id = ref_message.forward_from_message_id
+    def handle(self, context: CommandContext):
+        if context.command == '/update_markup':
+            channel_id, channel_message_id = self._get_root_message_info(context)
             str_trail_markup = self.space_state \
                 .ensure_channel_state(str(channel_id)) \
                 .markup_trail \
@@ -50,9 +40,42 @@ class CommandHandlerUpdateMarkup(CommandHandler):
                                                             enabled_reactions=enabled_reactions,
                                                             handler=constants.CHANNEL_POST_HANDLER,
                                                             case_id='')
-            self.telegram_bot.bot.edit_message_reply_markup(chat_id=channel_id,
-                                                            message_id=channel_message_id,
-                                                            reply_markup=reply_markup)
-        else:
-            raise ValueError(f'Unhandled command: {args.command}')
+            context.telegram_bot.bot.edit_message_reply_markup(chat_id=channel_id,
+                                                               message_id=channel_message_id,
+                                                               reply_markup=reply_markup)
+            context.reply('Done', log_level=logging.INFO)
 
+        elif context.command == '/force_counter':
+            var_name = context.get_mandatory_arg('name')
+            var_value_int = context.get_mandatory_arg('value', cast_func=int)
+
+            channel_id, channel_message_id = self._get_root_message_info(context)
+
+            markup_trail = self.space_state.ensure_channel_state(str(channel_id)).markup_trail
+            reply_markup_str = markup_trail.try_get(str(channel_message_id))
+            if reply_markup_str is None:
+                context.reply('Markup is not cached, press a reaction button first')
+                return
+
+            reply_markup = InlineKeyboardMarkup.de_json(reply_markup_str)
+            markup_utils.change_reaction_counter(reply_markup, reaction=var_name, value=var_value_int, is_delta=False)
+            context.telegram_bot.bot.edit_message_reply_markup(chat_id=channel_id,
+                                                               message_id=channel_message_id,
+                                                               reply_markup=reply_markup)
+            context.reply('Done', log_level=logging.INFO)
+        else:
+            raise ValueError(f'Unhandled command: {context.command}')
+
+    def _get_root_message_info(self, context: CommandContext) -> Tuple[int, int]:
+        ref_message: Message = context.sender_message.reply_to_message
+        if (ref_message is None) or (ref_message.forward_from_chat is None):
+            context.reply(f'Send {context.command} in comments to target channel post')
+            raise CommandMissingArgError(f'Command {context.command} sent not as a reply to channel post')
+
+        channel_id = ref_message.forward_from_chat.id
+        if not self.enabled_channels.is_enabled(str(channel_id)):
+            context.reply('Liker is not enabled for the given channel')
+            raise CommandMissingArgError(f'Command {context.command} sent for not enabled channel')
+
+        channel_message_id = ref_message.forward_from_message_id
+        return channel_id, channel_message_id

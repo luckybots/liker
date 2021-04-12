@@ -19,43 +19,21 @@ class CommandHandlerTakeMessage(CommandHandler):
                             is_admin=True),
                 ]
 
-    def handle(self,
-               sender_chat_id,
-               sender_message: Message,
-               args: Namespace):
-        if args.command == '/take_messages':
-            channel_id = args.channel_id
-            if channel_id is None:
-                self.telegram_bot.send_text(chat_id=sender_chat_id,
-                                            text='--channel_id required')
-                return
-
-            prev_bot_token = args.bot_token
-            if prev_bot_token is None:
-                self.telegram_bot.send_text(chat_id=sender_chat_id,
-                                            text='--bot_id required')
-                return
-
-            from_message_id = args.message_id
-            if from_message_id is None:
-                self.telegram_bot.send_text(chat_id=sender_chat_id,
-                                            text='--message_id required')
-                return
-
-            n_backward_messages = args.n
-
-            if n_backward_messages is None:
-                n_backward_messages = 1
+    def handle(self, context: CommandContext):
+        if context.command == '/take_messages':
+            channel_id = context.get_mandatory_arg('channel_id')
+            prev_bot_token = context.get_mandatory_arg('bot_token')
+            from_message_id = context.get_mandatory_arg('message_id')
+            n_backward_messages = context.get_optional_arg('n', default=1)
 
             arr_messages = self.telegram_api.get_chat_messages_backward(chat_id=channel_id,
                                                                         message_id=from_message_id,
                                                                         n_messages=n_backward_messages)
             n_messages = len(arr_messages)
-            period = 60 / self.config['channel_rate_per_minute']
+            period = 60 / context.config['channel_rate_per_minute']
             response_text = f'There are {n_messages:,} messages, will take approximately {n_messages * period:,.0f} ' \
                             f'seconds. Bot will not to respond to other commands and buttons clicks till finish'
-            self.telegram_bot.send_text(chat_id=sender_chat_id,
-                                        text=response_text)
+            context.reply(response_text, log_level=logging.INFO)
             n_processed = 0
             for msg in arr_messages:
                 try:
@@ -63,8 +41,7 @@ class CommandHandlerTakeMessage(CommandHandler):
                         # Verbose
                         if True:
                             if (n_processed > 0) and (n_processed % constants.TAKE_MESSAGE_VERBOSE_N == 0):
-                                self.telegram_bot.send_text(chat_id=sender_chat_id,
-                                                            text=f'Processed {n_processed:,} messages')
+                                context.reply(f'Processed {n_processed:,} messages', log_level=logging.INFO)
                             n_processed += 1
 
                         new_reply_markup = telegram_api_utils.api_to_bot_markup(msg.reply_markup)
@@ -74,30 +51,31 @@ class CommandHandlerTakeMessage(CommandHandler):
                                                                message_id=msg.id,
                                                                reply_markup=None)
                         # Modify reply markup by the new bot
-                        self.telegram_bot.bot.edit_message_reply_markup(chat_id=channel_id,
-                                                                        message_id=msg.id,
-                                                                        reply_markup=new_reply_markup)
-                        logger.info(f'Took {channel_id} message {msg.id}, will sleep for {period:.1f} seconds')
+                        context.telegram_bot.bot.edit_message_reply_markup(chat_id=channel_id,
+                                                                           message_id=msg.id,
+                                                                           reply_markup=new_reply_markup)
+                        logger.debug(f'Took {channel_id} message {msg.id}, will sleep for {period:.1f} seconds')
                         time.sleep(period)
                     except ApiTelegramException as ex:
                         logger.exception(ex)
                         if ex.error_code == telegram_error.TOO_MANY_REQUESTS:
+                            logging.warning(ex)
                             time.sleep(10)
                         else:
                             raise ex
                 except Exception as ex:
                     try:
-                        self.telegram_bot.send_text(chat_id=sender_chat_id,
-                                                    text=f'Error processing message {msg.id}: {str(ex)}')
+                        context.reply(f'Error processing message {msg.id}: {str(ex)}',
+                                      log_level=logging.ERROR)
                     except ApiTelegramException as ex:
                         logger.exception(ex)
                         if ex.error_code == telegram_error.TOO_MANY_REQUESTS:
+                            logging.warning(ex)
                             time.sleep(10)
                         else:
                             raise ex
 
-            logger.info(f'take_messages done {channel_id}')
-            self.telegram_bot.send_text(chat_id=sender_chat_id,
-                                        text=f'for {channel_id} message(s) were taken')
+            context.reply(f'for {channel_id} {n_messages} message(s) were taken',
+                          log_level=logging.INFO)
         else:
-            raise ValueError(f'Unhandled command: {args.command}')
+            raise ValueError(f'Unhandled command: {context.command}')

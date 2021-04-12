@@ -54,20 +54,23 @@ def extend_reply_markup(current_markup: Optional[types.InlineKeyboardMarkup],
     return markup_from_buttons(buttons_obj)
 
 
-def change_reaction_counter(reply_markup: types.InlineKeyboardMarkup, reaction: str, delta: int):
+def change_reaction_counter(reply_markup: types.InlineKeyboardMarkup, reaction: str, value: int, is_delta: bool):
     for btn in iterate_markup_buttons(reply_markup):
         if reaction in btn.text:
             prefix = btn.text.rstrip('0123456789-')
-            num_str = btn.text.replace(prefix, '')
 
-            num = _num_str_to_number(num_str)
-            if num is None:
-                logger.error(f'Cannot parse button reaction state: {btn.text}')
-                continue
-            num += delta
-            num_str = '' if (num == 0) else f'{num}'
+            if is_delta:
+                old_num_str = btn.text.replace(prefix, '')
+                old_num = _num_str_to_number(old_num_str)
+                if old_num is None:
+                    logger.error(f'Cannot parse button reaction state: {btn.text}')
+                    continue
+                num = old_num + value
+            else:
+                num = value
+            new_num_str = '' if (num == 0) else f'{num}'
 
-            t_new = f'{prefix}{num_str}'
+            t_new = f'{prefix}{new_num_str}'
             btn.text = t_new
             return
     raise Exception(f'Can not change reaction counter: {reply_markup.to_json()}')

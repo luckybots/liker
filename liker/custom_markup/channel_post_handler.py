@@ -2,7 +2,7 @@ import logging
 import inject
 from telebot.apihelper import ApiTelegramException
 from telebot.types import InlineKeyboardMarkup
-from tengine import Config, TelegramBot, telegram_bot_utils, Hasher, AbuseDetector
+from tengine import Config, TelegramBot, telegram_bot_utils, Hasher, AbuseDetector, ReplyContextSuppress
 from tengine.telegram.inbox_handler import *
 
 from liker.state.space_state import SpaceState
@@ -32,7 +32,7 @@ class ChannelPostHandler(TelegramInboxHandler):
         if not self.enabled_channels.is_enabled(str_channel_id):
             did_enabled = self.enabling_manager.try_set_reactions(channel_id=channel_id,
                                                                   reactions=constants.DEFAULT_REACTIONS,
-                                                                  reply_to_chat_id=None)
+                                                                  reply_context=ReplyContextSuppress())
             if not did_enabled:
                 return False
             else:
@@ -89,11 +89,17 @@ class ChannelPostHandler(TelegramInboxHandler):
         reaction_hash = self.hasher.trimmed(reaction_id, hash_bytes=constants.REACTION_HASH_BYTES)
         channel_state = self.space_state.ensure_channel_state(str(channel_id))
         if channel_state.last_reactions.has(reaction_hash):
-            markup_utils.change_reaction_counter(reply_markup=reply_markup_new, reaction=reaction, delta=-1)
+            markup_utils.change_reaction_counter(reply_markup=reply_markup_new,
+                                                 reaction=reaction,
+                                                 value=-1,
+                                                 is_delta=True)
             channel_state.last_reactions.remove(reaction_hash)
             response_to_user = self.config['response_reaction_removed'].format(reaction)
         else:
-            markup_utils.change_reaction_counter(reply_markup=reply_markup_new, reaction=reaction, delta=1)
+            markup_utils.change_reaction_counter(reply_markup=reply_markup_new,
+                                                 reaction=reaction,
+                                                 value=1,
+                                                 is_delta=True)
             channel_state.last_reactions.add(reaction_hash)
             response_to_user = self.config['response_reaction_added'].format(reaction)
 
