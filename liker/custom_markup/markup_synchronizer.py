@@ -100,7 +100,7 @@ class MarkupSynchronizer:
                         self.telegram_bot.bot.edit_message_reply_markup(chat_id=ch_id,
                                                                         message_id=m_id,
                                                                         reply_markup=reply_markup)
-                    # We don't break loop for all exceptions except TOO_MANY_REQUESTS to avoid infitie error loop
+                    # We don't break loop for all exceptions except TOO_MANY_REQUESTS to avoid infinite error loop
                     except ApiTelegramException as ex:
                         if ex.error_code == telegram_error.TOO_MANY_REQUESTS:
                             logger.error(f'Got TOO_MANY_REQUESTS error, will skip current channel update: {ex}')

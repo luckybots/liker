@@ -1,8 +1,6 @@
 import inject
 import logging
 from tengine.command.command_handler import *
-from tengine import TelegramBot
-from tengine import Config
 from telebot.types import InlineKeyboardMarkup
 
 from liker.state.enabled_channels import EnabledChannels
@@ -14,7 +12,6 @@ logger = logging.getLogger(__file__)
 
 
 class CommandHandlerUpdateMarkup(CommandHandler):
-    telegram_bot = inject.attr(TelegramBot)
     enabled_channels = inject.attr(EnabledChannels)
     space_state = inject.attr(SpaceState)
 
@@ -25,23 +22,20 @@ class CommandHandlerUpdateMarkup(CommandHandler):
                 ]
 
     def handle(self,
-               config: Config,
-               chat_id,
-               message: Message,
-               args: Namespace,
-               telegram_bot: TelegramBot,
-               command_parser: CommandParser):
+               sender_chat_id,
+               sender_message: Message,
+               args: Namespace):
         if args.command == '/update_markup':
-            ref_message: Message = message.reply_to_message
+            ref_message: Message = sender_message.reply_to_message
             if (ref_message is None) or (ref_message.forward_from_chat is None):
-                telegram_bot.send_text(chat_id=chat_id,
-                                       text='Send /update_markup in comments to target channel post')
+                self.telegram_bot.send_text(chat_id=sender_chat_id,
+                                            text='Send /update_markup in comments to target channel post')
                 return
 
             channel_id = ref_message.forward_from_chat.id
             if not self.enabled_channels.is_enabled(str(channel_id)):
-                telegram_bot.send_text(chat_id=chat_id,
-                                       text='Liker is not enabled for the given channel')
+                self.telegram_bot.send_text(chat_id=sender_chat_id,
+                                            text='Liker is not enabled for the given channel')
                 return
 
             channel_message_id = ref_message.forward_from_message_id

@@ -36,15 +36,27 @@ def bind_app_dependencies(binder: Binder):
                                lambda: TelegramCursor(bot=inject.instance(TelegramBot),
                                                       look_back_days=constants.BOT_LOOK_BACK_DAYS,
                                                       long_polling_timeout=constants.LONG_POLLING_TIMEOUT))
+
+    def get_handler_params() -> dict:
+        return {
+            'config': inject.instance(Config),
+            'telegram_bot': inject.instance(TelegramBot),
+        }
+    binder.bind_to_constructor(CommandHandlerPool, lambda: CommandHandlerPool(handlers=[
+        CommandHandlerEssentials(get_parser=lambda: inject.instance(CommandParser),
+                                 **get_handler_params()),
+        CommandHandlerPassword(**get_handler_params()),
+        CommandHandlerConfig(**get_handler_params()),
+        CommandHandlerSetReactions(**get_handler_params()),
+        CommandHandlerUpdateMarkup(**get_handler_params()),
+        CommandHandlerTakeMessage(**get_handler_params()),
+    ]))
+    binder.bind_to_constructor(CommandParser, lambda: CommandParser(handler_pool=inject.instance(CommandHandlerPool),
+                                                                    params=command_params))
     binder.bind_to_constructor(CommandHub, lambda: CommandHub(config=inject.instance(Config),
-                                                              handler_classes=[CommandHandlerEssentials,
-                                                                               CommandHandlerPassword,
-                                                                               CommandHandlerConfig,
-                                                                               CommandHandlerSetReactions,
-                                                                               CommandHandlerUpdateMarkup,
-                                                                               CommandHandlerTakeMessage],
-                                                              params=command_params,
-                                                              telegram_bot=inject.instance(TelegramBot)))
+                                                              telegram_bot=inject.instance(TelegramBot),
+                                                              parser=inject.instance(CommandParser),
+                                                              handler_pool=inject.instance(CommandHandlerPool)))
     binder.bind_to_constructor(MessagesLogger,
                                lambda: MessagesLogger(dir_path=constants.messages_log_dir(),
                                                       file_name_prefix=constants.MESSAGES_LOG_PREFIX,
