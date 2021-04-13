@@ -54,6 +54,10 @@ def setup_logs():
                 'level': 'DEBUG',
                 'propagate': True,
             },
+            # Mute mtprotosender logs
+            'telethon': {
+                'propagate': False,
+            },
         },
     }
 
