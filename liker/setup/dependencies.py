@@ -55,7 +55,8 @@ def bind_app_dependencies(binder: Binder):
                                lambda: MessagesLogger(dir_path=constants.messages_log_dir(),
                                                       file_name_prefix=constants.MESSAGES_LOG_PREFIX,
                                                       command_parser=inject.instance(CommandHub).parser,
-                                                      hasher=inject.instance(Hasher)))
+                                                      hasher=inject.instance(Hasher),
+                                                      chat_types=constants.MESSAGES_LOG_CHAT_TYPES))
     binder.bind_to_constructor(TelegramInboxHub,
                                lambda: TelegramInboxHub(telegram_cursor=inject.instance(TelegramCursor),
                                                         chain_handlers=[inject.instance(CommandHub),
