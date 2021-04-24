@@ -39,6 +39,7 @@ class CommandHandlerTakeMessage(CommandHandler):
             for msg in arr_messages:
                 try:
                     try:
+                        iteration_begin = time.time()
                         # Verbose
                         if True:
                             if (n_processed > 0) and (n_processed % constants.TAKE_MESSAGE_VERBOSE_N == 0):
@@ -59,7 +60,12 @@ class CommandHandlerTakeMessage(CommandHandler):
                                                                            message_id=msg.id,
                                                                            reply_markup=new_reply_markup)
                         logger.debug(f'Took {channel_id} message {msg.id}, will sleep for {period:.1f} seconds')
-                        time.sleep(period)
+
+                        iteration_end = time.time()
+                        iteration_remaining = period - (iteration_end - iteration_begin)
+                        if iteration_remaining > 0:
+                            logger.debug(f'Sleeping {iteration_remaining:.2f}')
+                            time.sleep(iteration_remaining)
                     except ApiTelegramException as ex:
                         logger.exception(ex)
                         if ex.error_code == telegram_error.TOO_MANY_REQUESTS:
