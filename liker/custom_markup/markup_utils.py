@@ -54,6 +54,20 @@ def extend_reply_markup(current_markup: Optional[types.InlineKeyboardMarkup],
     return markup_from_buttons(buttons_obj)
 
 
+def assign_reaction_buttons_data(markup: Optional[types.InlineKeyboardMarkup],
+                                 handler: str,
+                                 case_id: str) -> None:
+    for btn in iterate_markup_buttons(markup):
+        if btn.url is not None:
+            continue
+
+        restored_reaction = btn.text.rstrip('0123456789-')
+        data = telegram_bot_utils.encode_button_data(handler=handler,
+                                                     case_id=case_id,
+                                                     response=restored_reaction)
+        btn.callback_data = data
+
+
 def change_reaction_counter(reply_markup: types.InlineKeyboardMarkup, reaction: str, value: int, is_delta: bool):
     for btn in iterate_markup_buttons(reply_markup):
         if reaction in btn.text:

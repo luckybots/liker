@@ -6,6 +6,7 @@ from tengine.command.command_handler import *
 from tengine import TelegramBot, TelegramApi, telegram_api_utils, telegram_error
 
 from liker.setup import constants
+from liker.custom_markup import markup_utils
 
 logger = logging.getLogger(__file__)
 
@@ -45,6 +46,9 @@ class CommandHandlerTakeMessage(CommandHandler):
                             n_processed += 1
 
                         new_reply_markup = telegram_api_utils.api_to_bot_markup(msg.reply_markup)
+                        markup_utils.assign_reaction_buttons_data(markup=new_reply_markup,
+                                                                  handler=constants.CHANNEL_POST_HANDLER,
+                                                                  case_id='')
                         prev_bot = TelegramBot(token=prev_bot_token)
                         # Reset reply markup, needed for another bot to be able to modify it
                         prev_bot.bot.edit_message_reply_markup(chat_id=channel_id,
