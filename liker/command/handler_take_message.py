@@ -12,7 +12,12 @@ logger = logging.getLogger(__file__)
 
 
 class CommandHandlerTakeMessage(CommandHandler):
-    telegram_api = inject.attr(TelegramApi)
+    def __init__(self, use_telegram_user_api: bool):
+        self.use_telegram_user_api = use_telegram_user_api
+
+        self.telegram_api = None
+        if self.use_telegram_user_api:
+            self.telegram_api = inject.instance(TelegramApi)
 
     def get_cards(self) -> Iterable[CommandCard]:
         return [CommandCard(command_str='/take_messages',
@@ -22,6 +27,10 @@ class CommandHandlerTakeMessage(CommandHandler):
 
     def handle(self, context: CommandContext):
         if context.command == '/take_messages':
+            if not self.use_telegram_user_api:
+                context.reply('This command requires use_telegram_user_api to be enabled in config')
+                return
+
             channel_id = context.get_mandatory_arg('channel_id')
             prev_bot_token = context.get_mandatory_arg('bot_token')
             from_message_id = context.get_mandatory_arg('message_id')

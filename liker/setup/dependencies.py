@@ -24,6 +24,7 @@ def bind_app_dependencies(binder: Binder):
                                                 restart_seconds=constants.RESTART_SECONDS))
     binder.bind(Config, Config(config_path=constants.config_path(),
                                example_path=constants.config_example_path()))
+
     binder.bind_to_constructor(Hasher, lambda: Hasher(config=inject.instance(Config)))
     binder.bind_to_constructor(TelegramBot, lambda: TelegramBot(token=inject.instance(Config)['bot_token']))
     binder.bind_to_constructor(TelegramApi,
@@ -43,7 +44,7 @@ def bind_app_dependencies(binder: Binder):
         CommandHandlerConfig(),
         CommandHandlerSetReactions(),
         CommandHandlerUpdateMarkup(),
-        CommandHandlerTakeMessage(),
+        CommandHandlerTakeMessage(use_telegram_user_api=inject.instance(Config)['use_telegram_user_api']),
     ]))
     binder.bind_to_constructor(CommandParser, lambda: CommandParser(handler_pool=inject.instance(CommandHandlerPool),
                                                                     params=command_params))

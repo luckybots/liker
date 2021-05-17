@@ -8,6 +8,7 @@
   "hash_salt": "",
   "hash_bytes": 10,
   "bot_token": "",
+  "use_telegram_user_api": false,
   "telegram_api_session": "liker",
   "telegram_api_id": 0,
   "telegram_api_hash": "",
