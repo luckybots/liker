@@ -21,6 +21,10 @@ For example:
 To build your own version of Liker:
 
 1. Download the source code
+```
+git clone --recurse-submodules https://github.com/luckybots/liker.git
+```
+If you don't add `--recurse-submodules` -- you'll get an error during `make build` (make: *** No rule to make target 'build')
 
 2. Create and customize `data/config.json` according to `data/config_example.json`
 
