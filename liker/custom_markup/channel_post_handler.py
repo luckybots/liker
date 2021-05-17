@@ -2,7 +2,7 @@ import logging
 import inject
 from telebot.apihelper import ApiTelegramException
 from telebot.types import InlineKeyboardMarkup
-from tengi import Config, TelegramBot, telegram_bot_utils, Hasher, AbuseDetector, ReplyContextSuppress
+from tengi import Config, TelegramBot, telegram_bot_utils, Hasher, AbuseDetector, ReplyContextLogOnly
 from tengi.telegram.inbox_handler import *
 
 from liker.state.space_state import SpaceState
@@ -32,7 +32,8 @@ class ChannelPostHandler(TelegramInboxHandler):
         if not self.enabled_channels.is_enabled(str_channel_id):
             did_enabled = self.enabling_manager.try_set_reactions(channel_id=channel_id,
                                                                   reactions=constants.DEFAULT_REACTIONS,
-                                                                  reply_context=ReplyContextSuppress())
+                                                                  reply_context=ReplyContextLogOnly(),
+                                                                  sender_id_to_check=None)
             if not did_enabled:
                 return False
             else:

@@ -29,13 +29,15 @@ class CommandHandlerSetReactions(CommandHandler):
                               log_level=logging.INFO)
                 return
 
-            set_successfully = self.enabling_manager.try_set_reactions(channel_id=channel_id,
-                                                                       reactions=reactions,
-                                                                       reply_context=context)
+            set_successfully = self.enabling_manager.try_set_reactions(
+                channel_id=channel_id,
+                reactions=reactions,
+                reply_context=context,
+                sender_id_to_check=context.sender_message.from_user.id)
             if not set_successfully:
                 return
 
-            context.reply(f'for {channel_id} reactions are {reactions}',
+            context.reply(f'For {channel_id} reactions are {reactions}. Will be applied to new messages.',
                           log_level=logging.INFO)
         else:
             raise ValueError(f'Unhandled command: {context.command}')

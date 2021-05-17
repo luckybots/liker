@@ -25,8 +25,8 @@ class EnabledChannels(Preserver):
 
     @typechecked
     def update_channel_dict(self,
-                            str_channel_id:
-                            str, reactions: List[str],
+                            str_channel_id: str,
+                            reactions: List[str],
                             linked_chat_id: Optional[int]):
         new_fields = {
             'reactions': reactions,

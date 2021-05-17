@@ -51,6 +51,15 @@ class CommentHandler(TelegramInboxHandler):
             logger.debug('Check forward: ignoring message as it is not from enabled channel')
             return False
 
+        channel_dict = self.enabled_chats.get_channel_dict(str(channel_id))
+        group_id = message.chat.id
+        cur_linked_chat_id = channel_dict['linked_chat_id']
+        if cur_linked_chat_id != group_id:
+            logger.info(f'Updating linked_chat_id for {channel_id} from {cur_linked_chat_id} to {group_id}')
+            channel_dict['linked_chat_id'] = group_id
+            self.enabled_chats.set_channel_dict(str_channel_id=str(channel_id),
+                                                channel_dict=channel_dict)
+
         channel_message_id = message.forward_from_message_id
         thread_message_id = message.message_id
 
@@ -59,7 +68,7 @@ class CommentHandler(TelegramInboxHandler):
             logger.error(f'Was not able to get cached reply markup for {channel_id}')
             return True
 
-        group_id = message.chat.id
+
         reply_markup = self._ensure_comment_button(reply_markup=reply_markup,
                                                    group_id=group_id,
                                                    thread_message_id=thread_message_id)

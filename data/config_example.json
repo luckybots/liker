@@ -1,10 +1,30 @@
 {
-  "protected_vars": ["hash_salt", "hash_trim_bytes", "admin_password", "remembered_passwords"],
+  "protected_vars": [
+    "hash_salt",
+    "hash_trim_bytes",
+    "admin_password",
+    "remembered_passwords"
+  ],
   "hash_salt": "",
-  "hash_bytes": 0,
+  "hash_bytes": 10,
   "bot_token": "",
+  "telegram_api_session": "liker",
+  "telegram_api_id": 0,
+  "telegram_api_hash": "",
   "admin_password": "",
-  "remembered_passwords": { },
+  "remembered_passwords": {
+  },
+  "enable_only_for": [],
+  "last_reactions": 10000,
+  "last_reactions_save_seconds": 10,
+  "channel_rate_per_minute": 20,
+  "channel_rate_min_seconds": 1,
+  "global_rate_per_second": 30,
+  "reply_markup_trail": 100,
+  "comment_trail": 100,
+  "channel_state_save_seconds": 2,
   "response_reaction_added": "{}",
-  "response_reaction_removed": "{}"
+  "response_reaction_removed": "{} removed",
+  "response_command_parser_error": "Unknown or incomplete command {command}",
+  "response_unknown_command": "Unknown or incomplete command {command}"
 }
