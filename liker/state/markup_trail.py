@@ -3,7 +3,7 @@ import inject
 from jsonstore import JsonStore
 from typing import Optional
 from typeguard import typechecked
-from tengine import Config
+from tengi import Config
 
 logger = logging.getLogger(__file__)
 

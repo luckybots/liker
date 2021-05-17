@@ -2,8 +2,8 @@ import inject
 import logging
 import time
 from telebot.apihelper import ApiTelegramException
-from tengine.command.command_handler import *
-from tengine import TelegramBot, TelegramApi, telegram_api_utils, telegram_error
+from tengi.command.command_handler import *
+from tengi import TelegramBot, TelegramApi, telegram_api_utils, telegram_error
 
 from liker.setup import constants
 from liker.custom_markup import markup_utils

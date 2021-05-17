@@ -1,7 +1,7 @@
 from typeguard import typechecked
 from typing import List, Optional
-from tengine.state.preserver import *
-from tengine import telegram_bot_utils
+from tengi.state.preserver import *
+from tengi import telegram_bot_utils
 
 
 class EnabledChannels(Preserver):

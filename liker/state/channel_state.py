@@ -1,7 +1,7 @@
 from pathlib import Path
 import inject
-from tengine.state.timed_preserver import TimedPreserver
-from tengine import Config
+from tengi.state.timed_preserver import TimedPreserver
+from tengi import Config
 
 from liker.state.reaction_hashes import ReactionHashes
 from liker.state.markup_queue import MarkupQueue

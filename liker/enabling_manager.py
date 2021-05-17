@@ -1,7 +1,7 @@
 import logging
 import inject
 from telebot.apihelper import ApiTelegramException
-from tengine import Config, telegram_bot_utils, TelegramBot, ReplyContext
+from tengi import Config, telegram_bot_utils, TelegramBot, ReplyContext
 
 from liker.state.enabled_channels import EnabledChannels
 

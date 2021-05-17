@@ -49,7 +49,7 @@ def setup_logs():
                 'level': 'DEBUG',
                 'propagate': True,
             },
-            'tengine': {
+            'tengi': {
                 'handlers': ['console', 'file', 'error'],
                 'level': 'DEBUG',
                 'propagate': True,

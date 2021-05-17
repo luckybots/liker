@@ -4,7 +4,7 @@ import logging
 from telebot.apihelper import ApiTelegramException
 from typing import Optional
 from telebot.types import InlineKeyboardMarkup
-from tengine import Config, TelegramBot, telegram_error
+from tengi import Config, TelegramBot, telegram_error
 
 from liker.state.enabled_channels import EnabledChannels
 from liker.state.space_state import SpaceState

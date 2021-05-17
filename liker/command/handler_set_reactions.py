@@ -1,7 +1,7 @@
 import inject
 import logging
-from tengine.command.command_handler import *
-from tengine import telegram_bot_utils
+from tengi.command.command_handler import *
+from tengi import telegram_bot_utils
 
 from liker.state.enabled_channels import EnabledChannels
 from liker.enabling_manager import EnablingManager

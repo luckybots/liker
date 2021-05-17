@@ -1,5 +1,5 @@
 import inject
-from tengine import MessagesLogger, AbuseJanitor, TelegramApi
+from tengi import MessagesLogger, AbuseJanitor, TelegramApi
 
 
 def create_daemon_instances():

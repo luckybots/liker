@@ -1,9 +1,9 @@
 import inject
 import logging
-from tengine.command.command_handler import *
+from tengi.command.command_handler import *
 from telebot.types import InlineKeyboardMarkup, Message
 from typing import Tuple
-from tengine import CommandMissingArgError
+from tengi import CommandMissingArgError
 
 from liker.state.enabled_channels import EnabledChannels
 from liker.state.space_state import SpaceState

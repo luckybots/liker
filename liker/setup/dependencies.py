@@ -1,6 +1,6 @@
 from inject import Binder
 import inject
-from tengine import *
+from tengi import *
 
 from liker.setup import constants
 from liker.command.params import command_params

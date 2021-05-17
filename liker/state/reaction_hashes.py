@@ -1,6 +1,6 @@
 import inject
-from tengine import Config
-from tengine.state.timed_preserver import *
+from tengi import Config
+from tengi.state.timed_preserver import *
 
 
 class ReactionHashes(TimedPreserver):

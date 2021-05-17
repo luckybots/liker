@@ -2,8 +2,8 @@ import logging
 import inject
 from telebot.apihelper import ApiTelegramException
 from telebot.types import InlineKeyboardMarkup
-from tengine import Config, TelegramBot, telegram_bot_utils, Hasher, AbuseDetector, ReplyContextSuppress
-from tengine.telegram.inbox_handler import *
+from tengi import Config, TelegramBot, telegram_bot_utils, Hasher, AbuseDetector, ReplyContextSuppress
+from tengi.telegram.inbox_handler import *
 
 from liker.state.space_state import SpaceState
 from liker.state.enabled_channels import EnabledChannels

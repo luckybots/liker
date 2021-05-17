@@ -1,9 +1,9 @@
 import logging
 import inject
 from telebot.types import InlineKeyboardMarkup
-from tengine import telegram_bot_utils
-from tengine.telegram.inbox_handler import *
-from tengine.telegram.constants import TELEGRAM_USER_ID
+from tengi import telegram_bot_utils
+from tengi.telegram.inbox_handler import *
+from tengi.telegram.constants import TELEGRAM_USER_ID
 
 from liker.state.enabled_channels import EnabledChannels
 from liker.state.space_state import SpaceState

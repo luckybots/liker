@@ -1,6 +1,3 @@
-[submodule "tengine"]
-	path = tengine
-	url = https://github.com/luckybots/tengine.git
 [submodule "helpy_files"]
 	path = helpy_files
 	url = https://github.com/luckybots/helpy_files

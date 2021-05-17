@@ -2,8 +2,8 @@ from unittest.mock import patch
 import pytest
 from pathlib import Path
 from telebot import TeleBot
-from tengine.app import App
-from tengine.tests.test_utils import get_telegram_message_update
+from tengi.app import App
+from tengi.tests.test_utils import get_telegram_message_update
 
 
 @pytest.fixture()

@@ -1,7 +1,7 @@
 import logging
 from telebot import types
 from typing import Iterable, List, Optional
-from tengine import telegram_bot_utils
+from tengi import telegram_bot_utils
 
 from liker.setup import constants
 
