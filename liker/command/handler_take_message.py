@@ -36,9 +36,16 @@ class CommandHandlerTakeMessage(CommandHandler):
             from_message_id = context.get_mandatory_arg('message_id')
             n_backward_messages = context.get_optional_arg('n', default=1)
 
-            arr_messages = self.telegram_api.get_chat_messages_backward(chat_id=channel_id,
-                                                                        message_id=from_message_id,
-                                                                        n_messages=n_backward_messages)
+            try:
+                arr_messages = self.telegram_api.get_chat_messages_backward(chat_id=channel_id,
+                                                                            message_id=from_message_id,
+                                                                            n_messages=n_backward_messages)
+            except ValueError as ex:
+                # Error like "Could not find the input entity for PeerChannel(channel_id=1322520409)", most likely
+                # means the user wasn't added to the channel or channel doesn't exist
+                context.reply(text=str(ex), log_level=logging.INFO)
+                return
+
             n_messages = len(arr_messages)
             period = 60 / context.config['channel_rate_per_minute']
             response_text = f'There are {n_messages:,} messages, will take approximately {n_messages * period:,.0f} ' \
@@ -76,23 +83,21 @@ class CommandHandlerTakeMessage(CommandHandler):
                             logger.debug(f'Sleeping {iteration_remaining:.2f}')
                             time.sleep(iteration_remaining)
                     except ApiTelegramException as ex:
-                        logger.exception(ex)
                         if ex.error_code == telegram_error.TOO_MANY_REQUESTS:
                             logging.warning(ex)
                             time.sleep(10)
+                        elif ex.error_code == telegram_error.UNAUTHORIZED:
+                            logging.info(str(ex))
+                            context.reply('Bot has no rights to perform the operation')
+                            return
+                        elif ex.error_code == telegram_error.BAD_REQUEST:
+                            logging.info(str(ex))
+                            context.reply(f'Message {msg.id} was deleted or not yet posted')
                         else:
                             raise ex
                 except Exception as ex:
-                    try:
-                        context.reply(f'Error processing message {msg.id}: {str(ex)}',
-                                      log_level=logging.ERROR)
-                    except ApiTelegramException as ex:
-                        logger.exception(ex)
-                        if ex.error_code == telegram_error.TOO_MANY_REQUESTS:
-                            logging.warning(ex)
-                            time.sleep(10)
-                        else:
-                            raise ex
+                    logger.exception(ex)
+                    context.reply(f'Error processing message {msg.id}: {str(ex)}')
 
             context.reply(f'for {channel_id} {n_messages} message(s) were taken',
                           log_level=logging.INFO)

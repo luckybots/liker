@@ -24,7 +24,7 @@
   "reply_markup_trail": 100,
   "comment_trail": 100,
   "channel_state_save_seconds": 2,
-  "response_start": "Liker bot allows you to add reactions (likes, etc.) to channel posts. Give Liker bot an admin permission to edit posts in your channel.",
+  "response_start": "Liker bot allows you to add reactions (likes, etc.) to channel posts. Give Liker bot an admin permission to edit posts in your channel. Use /help to get more information.",
   "response_help": "Give Liker bot an admin permission to edit posts in your channel. Use /set_reactions command to customize channel post reactions",
   "response_reaction_added": "{}",
   "response_reaction_removed": "{} removed",

@@ -105,10 +105,14 @@ class MarkupSynchronizer:
                         if ex.error_code == telegram_error.TOO_MANY_REQUESTS:
                             logger.error(f'Got TOO_MANY_REQUESTS error, will skip current channel update: {ex}')
                             break
+                        elif (ex.error_code == telegram_error.BAD_REQUEST) and ('are exactly the same' in str(ex)):
+                            # Error: Bad Request: message is not modified: specified new message content and reply
+                            #   markup are exactly the same as a current content and reply markup of the message"
+                            logger.warning(str(ex))
                         else:
-                            logger.exception(ex)
+                            logger.exception(f'Chat {ch_id}, message {m_id_str}\n{ex}')
                     except Exception as ex:
-                        logger.exception(ex)
+                        logger.exception(f'Chat {ch_id}, message {m_id_str}\n{ex}')
 
                     # We delete markup from the queue only after it's synchronized
                     if m_id_str is not None:
