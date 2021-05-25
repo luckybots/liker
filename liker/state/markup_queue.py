@@ -10,12 +10,12 @@ class MarkupQueue:
     def __init__(self, state: JsonStore):
         self.state = state
 
-    def ensure_queue(self):
+    def ensure_queue(self) -> dict:
         if 'markup_queue' not in self.state:
             self.state['markup_queue'] = {}
         return self.state['markup_queue']
 
-    def update_queue(self, markup_queue):
+    def update_queue(self, markup_queue: dict):
         self.state['markup_queue'] = markup_queue
 
     @typechecked

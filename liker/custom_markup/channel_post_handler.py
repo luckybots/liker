@@ -113,6 +113,8 @@ class ChannelPostHandler(TelegramInboxHandler):
         try:
             self.telegram_bot.answer_callback_query(callback_query.id, text=response_to_user)
         except ApiTelegramException as ex:
-            logger.info(f'Cannot answer callback query, most likely it is expired: {ex}')
-
+            channel_username = callback_query.message.chat.username
+            logger.info(f'Cannot answer callback query, callback_id={callback_query.id}, message_id={message_id}, '
+                        f'channel_id={channel_id}, channel_username={channel_username}, '
+                        f'most likely it is expired: {ex}')
         return True

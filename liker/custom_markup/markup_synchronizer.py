@@ -77,6 +77,14 @@ class MarkupSynchronizer:
                     reply_markup_str = None
                     try:
                         m_id_str = list(ch_queue.keys())[0]
+
+                        # Handle channel being disabled during the iteration -- could happen in case bot was
+                        # removed from the channel
+                        if not self.enabled_channels.is_enabled(str(ch_id)):
+                            logger.info(f'Channel was disabled, ignoring {len(ch_queue):,} markups in the queue')
+                            ch_queue = {}
+                            break
+
                         reply_markup_str = ch_queue[m_id_str]
 
                         # If we made 'rate_per_minute' updates per last minute -- don't send more updates
@@ -100,6 +108,7 @@ class MarkupSynchronizer:
                         self.telegram_bot.bot.edit_message_reply_markup(chat_id=ch_id,
                                                                         message_id=m_id,
                                                                         reply_markup=reply_markup)
+                        logger.debug(f'Markup synchronized for chat_id={ch_id}, message_id={m_id}')
                     # We don't break loop for all exceptions except TOO_MANY_REQUESTS to avoid infinite error loop
                     except ApiTelegramException as ex:
                         if ex.error_code == telegram_error.TOO_MANY_REQUESTS:
@@ -108,11 +117,20 @@ class MarkupSynchronizer:
                         elif (ex.error_code == telegram_error.BAD_REQUEST) and ('are exactly the same' in str(ex)):
                             # Error: Bad Request: message is not modified: specified new message content and reply
                             #   markup are exactly the same as a current content and reply markup of the message"
-                            logger.warning(str(ex))
+                            logger.warning(f'Cannot sync markup, chat_id={ch_id}, message_id={m_id_str}. {ex}')
+                        elif (ex.error_code == telegram_error.BAD_REQUEST) and \
+                                ('''message can't be edited''' in str(ex)):
+                            # Error: Bad Request: message can't be edited
+                            logger.warning(f'Bot does not have post edit rights, chat_id={ch_id}, '
+                                           f'message_id={m_id_str}. {ex}')
+                        elif ex.error_code == telegram_error.FORBIDDEN:
+                            logger.warning(f'Bot was removed from the channel but tries to synchronize markup: '
+                                           f'chat_id={ch_id}, message_id={m_id_str}. {ex}')
+                            self.enabled_channels.disable_channel(str(ch_id))
                         else:
-                            logger.exception(f'Chat {ch_id}, message {m_id_str}\n{ex}')
+                            logger.exception(f'chat_id={ch_id}, message_id={m_id_str}\n{ex}')
                     except Exception as ex:
-                        logger.exception(f'Chat {ch_id}, message {m_id_str}\n{ex}')
+                        logger.exception(f'chat_id={ch_id}, message_id={m_id_str}\n{ex}')
 
                     # We delete markup from the queue only after it's synchronized
                     if m_id_str is not None:

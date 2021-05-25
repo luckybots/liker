@@ -68,7 +68,6 @@ class CommentHandler(TelegramInboxHandler):
             logger.error(f'Was not able to get cached reply markup for {channel_id}')
             return True
 
-
         reply_markup = self._ensure_comment_button(reply_markup=reply_markup,
                                                    group_id=group_id,
                                                    thread_message_id=thread_message_id)
@@ -76,6 +75,7 @@ class CommentHandler(TelegramInboxHandler):
                                      message_id=channel_message_id,
                                      reply_markup=reply_markup,
                                      to_top=True)
+        logger.info(f'Comments button adding scheduled for chat_id={channel_id}, message_id={channel_message_id}')
         return True
 
     def _check_reply_to_channel_post(self, message: types.Message) -> bool:

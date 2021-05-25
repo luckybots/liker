@@ -39,6 +39,11 @@ class EnabledChannels(Preserver):
             channel_dict = new_fields
         self.set_channel_dict(str_channel_id=str_channel_id, channel_dict=channel_dict)
 
+    def disable_channel(self, str_channel_id: str):
+        assert self.is_enabled(str_channel_id)
+        with self.state:
+            del self.state[str_channel_id]
+
     def enabled_channel_ids(self) -> List[int]:
         str_arr = self.state.__dict__['_data'].keys()
         arr = [int(x) for x in str_arr]
