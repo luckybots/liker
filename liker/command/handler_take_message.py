@@ -32,7 +32,7 @@ class CommandHandlerTakeMessage(CommandHandler):
                 return
 
             channel_id = context.get_mandatory_arg('channel_id')
-            prev_bot_token = context.get_mandatory_arg('bot_token')
+            prev_bot_token = context.get_optional_arg('bot_token', default=None)
             from_message_id = context.get_mandatory_arg('message_id')
             n_backward_messages = context.get_optional_arg('n', default=1)
 
@@ -52,6 +52,14 @@ class CommandHandlerTakeMessage(CommandHandler):
                             f'seconds. Bot will not to respond to other commands and buttons clicks till finish'
             context.reply(response_text, log_level=logging.INFO)
             n_processed = 0
+
+            prev_bot = None
+            if prev_bot_token is not None:
+                prev_bot = TelegramBot(token=prev_bot_token)
+            else:
+                context.reply(f'bot_token is not provided, will work fine if the messages have no buttons yet',
+                              log_level=logging.INFO)
+
             for msg in arr_messages:
                 try:
                     try:
@@ -66,11 +74,12 @@ class CommandHandlerTakeMessage(CommandHandler):
                         markup_utils.assign_reaction_buttons_data(markup=new_reply_markup,
                                                                   handler=constants.CHANNEL_POST_HANDLER,
                                                                   case_id='')
-                        prev_bot = TelegramBot(token=prev_bot_token)
-                        # Reset reply markup, needed for another bot to be able to modify it
-                        prev_bot.bot.edit_message_reply_markup(chat_id=channel_id,
-                                                               message_id=msg.id,
-                                                               reply_markup=None)
+
+                        if prev_bot is not None:
+                            # Reset reply markup, needed for another bot to be able to modify it
+                            prev_bot.bot.edit_message_reply_markup(chat_id=channel_id,
+                                                                   message_id=msg.id,
+                                                                   reply_markup=None)
                         # Modify reply markup by the new bot
                         context.telegram_bot.bot.edit_message_reply_markup(chat_id=channel_id,
                                                                            message_id=msg.id,
