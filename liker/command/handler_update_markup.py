@@ -9,6 +9,7 @@ from liker.state.enabled_channels import EnabledChannels
 from liker.state.space_state import SpaceState
 from liker.custom_markup import markup_utils
 from liker.setup import constants
+from liker.custom_markup.markup_synchronizer import MarkupSynchronizer
 
 logger = logging.getLogger(__file__)
 
@@ -16,6 +17,7 @@ logger = logging.getLogger(__file__)
 class CommandHandlerUpdateMarkup(CommandHandler):
     enabled_channels = inject.attr(EnabledChannels)
     space_state = inject.attr(SpaceState)
+    markup_synchronizer = inject.attr(MarkupSynchronizer)
 
     def get_cards(self) -> Iterable[CommandCard]:
         return [CommandCard(command_str='/update_markup',
@@ -40,10 +42,11 @@ class CommandHandlerUpdateMarkup(CommandHandler):
                                                             enabled_reactions=enabled_reactions,
                                                             handler=constants.CHANNEL_POST_HANDLER,
                                                             case_id='')
-            context.telegram_bot.bot.edit_message_reply_markup(chat_id=channel_id,
-                                                               message_id=channel_message_id,
-                                                               reply_markup=reply_markup)
-            context.reply('Done', log_level=logging.INFO)
+            self.markup_synchronizer.add(channel_id=channel_id,
+                                         message_id=channel_message_id,
+                                         reply_markup=reply_markup,
+                                         to_top=True)
+            context.reply('Markup change scheduled', log_level=logging.INFO)
 
         elif context.command == '/force_counter':
             var_name = context.get_mandatory_arg('name')
@@ -59,10 +62,11 @@ class CommandHandlerUpdateMarkup(CommandHandler):
 
             reply_markup = InlineKeyboardMarkup.de_json(reply_markup_str)
             markup_utils.change_reaction_counter(reply_markup, reaction=var_name, value=var_value_int, is_delta=False)
-            context.telegram_bot.bot.edit_message_reply_markup(chat_id=channel_id,
-                                                               message_id=channel_message_id,
-                                                               reply_markup=reply_markup)
-            context.reply('Done', log_level=logging.INFO)
+            self.markup_synchronizer.add(channel_id=channel_id,
+                                         message_id=channel_message_id,
+                                         reply_markup=reply_markup,
+                                         to_top=True)
+            context.reply('Markup change scheduled', log_level=logging.INFO)
         else:
             raise ValueError(f'Unhandled command: {context.command}')
 
